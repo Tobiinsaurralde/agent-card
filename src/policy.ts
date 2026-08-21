@@ -51,17 +51,21 @@ export function evaluate(
   policy: CardPolicy,
 ): Decision {
   // 1. Cortes duros: estado de la tarjeta antes que cualquier monto.
+  //
+  // El orden va de la causa más específica a la más genérica. `completeTask()`
+  // cierra la tarjeta, así que si `CARD_CLOSED` fuera primero taparía el motivo
+  // real y el recibo diría "cerrada" en vez de "la tarea terminó".
   if (state.killed) {
     return deny("KILL_SWITCH", "Kill switch global activo.");
-  }
-  if (state.closed) {
-    return deny("CARD_CLOSED", "La tarjeta está cerrada.");
   }
   if (policy.closeOnTaskComplete && state.taskComplete) {
     return deny(
       "TASK_COMPLETE",
       "La tarea que originó la tarjeta ya terminó. Sin esto, una suscripción sigue renovando para siempre.",
     );
+  }
+  if (state.closed) {
+    return deny("CARD_CLOSED", "La tarjeta está cerrada.");
   }
   if (policy.ttlSeconds !== null) {
     const ageSeconds = (attempt.at.getTime() - state.openedAt.getTime()) / 1000;
