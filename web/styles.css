@@ -22,8 +22,8 @@
   --destructive-soft: oklch(0.55 0.2 24 / 10%);
   --warning: oklch(0.55 0.13 80);
   --warning-soft: oklch(0.55 0.13 80 / 14%);
-  --gold: oklch(0.58 0.12 90);
-  --gold-soft: oklch(0.58 0.12 90 / 12%);
+  --gold: oklch(0.52 0.11 88);
+  --gold-soft: oklch(0.52 0.11 88 / 12%);
 }
 
 .dark {
@@ -98,6 +98,71 @@ body {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+}
+
+/* Texto con el degradé de marca del logo: azul → dorado. Solo para highlights. */
+.text-gradient-brand {
+  background: linear-gradient(100deg, var(--accent) 10%, var(--gold) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Barra de marca: el degradé del escudo del logo, con un desplazamiento ambiental lento. */
+.brand-bar {
+  background: linear-gradient(90deg, var(--accent), var(--gold), var(--accent));
+  background-size: 200% 100%;
+  animation: bar-slide 14s linear infinite;
+}
+
+@keyframes bar-slide {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 400ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float-y 7s ease-in-out infinite;
+}
+
+/* Barrido de brillo sobre la tarjeta al pasar el cursor. */
+.card-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 42%, oklch(1 0 0 / 9%) 50%, transparent 58%);
+  transform: translateX(-130%);
+  transition: transform 500ms cubic-bezier(0, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.card-shine:hover::after {
+  transform: translateX(130%);
 }
 
 @keyframes row-in {

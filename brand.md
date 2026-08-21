@@ -35,6 +35,19 @@ Regla: todo monto, código de decisión, PAN y contador va en mono. Todo lo dem�
 
 Grises fríos (matiz ~260), un solo acento azul, y semánticos solo con significado semántico.
 
+### Superficie de marca: clara
+
+La landing es **clara** (papel frío, como el fondo del `logo-light`): el azul y el dorado se ven,
+el negro queda reservado para la tarjeta como objeto físico y para el modo oscuro del simulador.
+El degradé azul→dorado del escudo del logo aparece como: barra de marca superior e inferior (3px,
+animada lento), highlight del H1, subrayado de headings de sección y numeración de pasos.
+
+### Motion de la landing
+
+Entrada del hero escalonada (400 ms, una vez), reveal al scroll (300 ms, una vez por elemento),
+tilt 3D de la tarjeta siguiendo el puntero, flotación suave del recibo (7 s), barrido de brillo en
+la tarjeta al hover, y elevación de 2px en cards. Todo muere con `prefers-reduced-motion`.
+
 ### Dupla de marca: azul + dorado
 
 El azul es el color de **todo lo interactivo e informacional**: foco, enlaces, selección, iconos de

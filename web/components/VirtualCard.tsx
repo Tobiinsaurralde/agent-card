@@ -37,7 +37,7 @@ export function VirtualCard({
 
   return (
     <div
-      className="relative aspect-[1.586] w-full overflow-hidden rounded-2xl p-4 text-white shadow-lg sm:p-5"
+      className="card-shine relative aspect-[1.586] w-full overflow-hidden rounded-2xl p-4 text-white shadow-lg sm:p-5"
       style={{
         background:
           "radial-gradient(120% 90% at 15% 0%, oklch(0.32 0.05 262) 0%, transparent 55%), radial-gradient(55% 45% at 90% 95%, oklch(0.75 0.11 92 / 7%) 0%, transparent 70%), linear-gradient(135deg, oklch(0.23 0.03 265) 0%, oklch(0.15 0.02 250) 100%)",
