@@ -1,0 +1,22 @@
+{
+  "name": "agent-card",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Capa de control con defaults seguros para tarjetas de agentes. Provider-agnostic.",
+  "type": "module",
+  "scripts": {
+    "harness": "node --import tsx harness/run.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "author": "Tobias Insaurralde",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.6.0"
+  }
+}

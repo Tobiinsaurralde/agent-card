@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Qué shippear en 14 días — solana-execution-mcp</title>
+  <style>
+    :root {
+      --bg: #f6f9fc;
+      --card: #ffffff;
+      --ink: #0a2540;
+      --muted: #425466;
+      --line: #e6ebf1;
+      --accent: #635bff;
+      --accent-soft: #eeedfe;
+      --good: #0d9488;
+      --bad: #c41e3a;
+      --shadow: 0 12px 32px rgba(10, 37, 64, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 80px; }
+    header {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 36px 40px;
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+    }
+    .kicker {
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    h1 { margin: 8px 0 12px; font-size: 34px; letter-spacing: -0.03em; }
+    .lede { color: var(--muted); font-size: 17px; max-width: 68ch; }
+    .meta { margin-top: 18px; font-size: 13px; color: var(--muted); }
+    .grid { display: grid; gap: 16px; }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px 28px;
+      box-shadow: var(--shadow);
+    }
+    h2 { margin: 0 0 12px; font-size: 20px; }
+    h3 { margin: 0 0 8px; font-size: 18px; }
+    ul { margin: 8px 0 0; padding-left: 18px; }
+    li { margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    .winner { background: var(--accent-soft); color: var(--accent); }
+    .lost { background: #f3f4f6; color: var(--muted); }
+    .score { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .callout {
+      background: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      padding: 14px 16px;
+      border-radius: 0 12px 12px 0;
+      margin-top: 14px;
+    }
+    .kill { color: var(--bad); }
+    .ok { color: var(--good); }
+    .idea { margin-bottom: 16px; }
+    footer { margin-top: 28px; color: var(--muted); font-size: 13px; }
+    code { font-size: 0.92em; background: #eef2f6; padding: 1px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="kicker">Shortlist · 21 ago 2026 · Stripe</div>
+      <h1>No construyas otro Helius. Hacé que el nombre del paquete sea verdad.</h1>
+      <p class="lede">
+        Pediste shippear un producto en ~2 semanas, terminando <code>solana-execution-mcp</code>,
+        y que se tenga en cuenta AlphArena, DECENTRA y el portfolio. Inventarié repos y código.
+        Investigación de mercado <em>después</em> de eso. Veredicto: el MCP actual es read-only
+        con 11 descargas/semana. Helius y Phantom ya ganaron lectura y firma naive.
+        Tu edge no está ahí.
+      </p>
+      <p class="meta">Tobias Insaurralde · Corrientes · Cursor Ambassador · npm <code>solana-execution-mcp@1.0.0</code></p>
+    </header>
+
+    <section class="card">
+      <h2>Lo que realmente tenés (no el portfolio copy)</h2>
+      <table>
+        <thead>
+          <tr><th>Activo</th><th>Estado honesto</th><th>Sirve para este ship</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>solana-execution-mcp</strong><br>github.com/Tobiinsaurralde/solana-mcp</td>
+            <td>4 tools read-only. Tests reales. Publicado 6 ago. ~11 downloads/semana (el pico 124 fue launch/bots). El nombre dice execution; el código no firma.</td>
+            <td class="ok">Sí — es el vehículo. Hay que cambiar lo que hace.</td>
+          </tr>
+          <tr>
+            <td><strong>turnkey-agent-wallet</strong></td>
+            <td>Demo contra Turnkey real (6 ago): el cap naive deja pasar <code>createAccount</code> y dos transfers de 0.09. Policy hardened las niega. No broadcast.</td>
+            <td class="ok">Sí — esto es el producto. Hoy está en otro repo.</td>
+          </tr>
+          <tr>
+            <td><strong>AlphArena</strong> app.alpharena.ai</td>
+            <td>Producto live, dinero real, WebSocket, repost de @solana. El repo local <code>ALPHA/AlphArena</code> es una landing Vite, no el backend. Org GitHub: solanacloud, agents-office, eliza plugin. Código del producto no está en este workspace.</td>
+            <td>Distribución / prueba de ship, no el MVP de 14 días.</td>
+          </tr>
+          <tr>
+            <td><strong>DECENTRA</strong> (marca, no org GitHub)</td>
+            <td>Solana Cloud, ZAP, DC fn, Agents Office, Shadow Payroll, shadr. Links viven. Shadow Payroll: Phase 1 scaffolding, Umbra <em>devnet</em>. shadr: localnet, README dice Phase 0. Métricas de latencia/primicia del portfolio no verificadas.</td>
+            <td>Prueba de que sabés x402/USDC. No eliges uno de estos para 14 días.</td>
+          </tr>
+          <tr>
+            <td>1LLET, Openfort bot, Nummora, Social Predicts</td>
+            <td>Hackathon / tutorial / explícitamente fuera de CVs (Nummora).</td>
+            <td>No.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <strong>Edge unfair:</strong> ya corriste las dos transacciones que rompen el spending cap que todo el mundo escribe primero, contra Turnkey de verdad.
+        <strong>Constraint:</strong> usable en 14 días, no raise.
+        <strong>Crypto touchpoint:</strong> autorización de una firma Ed25519 contra layout de tx Solana. Si sacás la chain, no queda producto.
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:16px">
+      <h2>Por qué los tres candidatos son MCP</h2>
+      <p>Lo pediste vos: terminar este paquete. No son tres startups distintas. Son tres wedges sobre el mismo binario. La diversidad es <em>qué hace el agente</em>, no el stack.</p>
+      <table>
+        <thead>
+          <tr><th></th><th>Winner</th><th>2º</th><th>3º</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Idea</th>
+            <td>Firma con policy hardened</td>
+            <td>Paywall x402 de las 4 tools</td>
+            <td>Debug DX tipo Helius flaco</td>
+          </tr>
+          <tr>
+            <th>Founder fit</th>
+            <td class="score">3</td><td class="score">2</td><td class="score">2</td>
+          </tr>
+          <tr>
+            <th>MVP speed</th>
+            <td class="score">2</td><td class="score">2</td><td class="score">3</td>
+          </tr>
+          <tr>
+            <th>Distribution</th>
+            <td class="score">2</td><td class="score">1</td><td class="score">3</td>
+          </tr>
+          <tr>
+            <th>Market pull</th>
+            <td class="score">2</td><td class="score">1</td><td class="score">1</td>
+          </tr>
+          <tr>
+            <th>Revenue</th>
+            <td class="score">2</td><td class="score">2</td><td class="score">1</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <article class="card idea" style="margin-top:16px">
+      <span class="badge winner">Winner · rank 1</span>
+      <h3 style="margin-top:10px">solana-execution-mcp v2 — firma que no se drena</h3>
+      <p>Un agente puede pedir firmar. Turnkey evalúa. Las dos txs que hoy atraviesan el cap de 0.1 SOL (<code>SystemProgram.createAccount</code> y dos transfers de 0.09 en la misma tx) salen <strong>denied</strong>. Las 4 tools de lectura se quedan. No hay broadcast en el MVP.</p>
+      <p><strong>Por qué gana.</strong> Es el único lugar donde tu repo ya es la evidencia, el nombre del paquete deja de mentir, y no estás peleando el catálogo de Helius. El workaround feo del mercado es literal: <code>SOLANA_PRIVATE_KEY</code> en el <code>mcp.json</code> de Solinkify, Nory, Nonagon, AgentBazaar, pr402.</p>
+      <p><strong>Por qué crypto es necesario.</strong> Sin Solana no hay instruction layout que evaluar. IAM de AWS no entiende PDAs. Stripe no firma SPL.</p>
+      <p class="kill"><strong>Bear:</strong> si la gente acepta pegar una key drainable, esto es un blog post. <span class="ok">Sobrevive porque el demo ya corre contra Turnkey y el install es un <code>npx</code>.</span></p>
+      <p><strong>Integra, no buildees protocolo:</strong> Turnkey Policy Engine + simulación RPC. Cero programa Anchor nuevo.</p>
+      <h2>Competidores</h2>
+      <table>
+        <thead><tr><th>Quién</th><th>Tipo</th><th>Señal</th><th>Por qué no ganaron <em>este</em> wedge</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>helius-mcp</td>
+            <td>directo</td>
+            <td>~204/sem, 10 tools, <code>heliusWrite</code></td>
+            <td>Data company. Write = keypair. No enseñan el trap de createAccount.</td>
+          </tr>
+          <tr>
+            <td>@phantom/mcp-server</td>
+            <td>directo</td>
+            <td>~760/sem, device-code, wallet nueva del agente</td>
+            <td>Wallet de agente, no policy DSL sobre instrucciones.</td>
+          </tr>
+          <tr>
+            <td>Turnkey docs (Agentic Wallets)</td>
+            <td>adyacente</td>
+            <td>Ellos son el enclave</td>
+            <td>No hay MCP oficial. Tu demo de 6 escenarios es el missing piece.</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2>MVP 14 días</h2>
+      <ul>
+        <li>Portar <code>turnkey-agent-wallet</code> a este repo: <code>policy_status</code>, <code>simulate</code>, <code>sign_if_allowed</code>, <code>deny_reason</code>.</li>
+        <li>Policy hardened por defecto. Naive queda como tool de demo, no como default.</li>
+        <li>Publicar <code>1.1.0</code>. Un post <em>del producto</em>, no un tutorial gratis de Turnkey (eso ya lo frenaste el 19 ago).</li>
+        <li>10 installs reales: meetup Cursor, Superteam ARG 28 ago, DMs a gente con private key en MCP.</li>
+      </ul>
+    </article>
+
+    <article class="card idea">
+      <span class="badge lost">Perdió · rank 2</span>
+      <h3 style="margin-top:10px">Paywall x402 sobre las 4 tools actuales</h3>
+      <p>Era tu línea autorizada (grant x402 + Instagrant). Se shippea. <strong>No es un producto.</strong> Estarías cobrando USDC por CoinGecko y <code>getBalance</code>. Helius ya hace signup con USDC. Civic / Foundation / BlockRun ya cubren el middleware. 11 usuarios/semana no pagan un 402.</p>
+      <p class="kill"><strong>Bear:</strong> cobrás el grant y el paquete sigue vacío. <span class="ok">Queda en el shortlist solo como feature <em>después</em> de que <code>sign_if_allowed</code> exista y valga 0.001 USDC.</span></p>
+    </article>
+
+    <article class="card idea">
+      <span class="badge lost">Perdió · rank 3</span>
+      <h3 style="margin-top:10px">MCP DX para Cursor (simulate / decode, sin API key)</h3>
+      <p>Es lo más rápido y donde tu distribución (embajador Cursor, Superteam 28 ago) es más fuerte. También es un Helius peor. <code>helius-mcp@2.1.0</code> ya tiene simulate, parse, DAS, webhooks y write. “Sin API key” = RPC pública rate-limited. Usá esa distribución para instalar el winner, no para clonar tools.</p>
+      <p class="kill"><strong>Bear:</strong> dos semanas para que te comparen con <code>npx helius-mcp@latest</code> y pierdas. <span class="ok">Sobrevive en el shortlist para documentar la tentación y matarla.</span></p>
+    </article>
+
+    <section class="card">
+      <h2>Qué no hacer esta quincena</h2>
+      <ul>
+        <li>No revivir Solana Cloud / ZAP / DC fn / Agents Office / shadr / Shadow Payroll como “el producto”.</li>
+        <li>No competir con Helius en datos ni con Phantom en “el agente tiene una wallet”.</li>
+        <li>No paywallear <code>get_sol_price</code>.</li>
+        <li>No fabricar un hilo ad honorem de Turnkey. El post, si sale, es de <em>tu</em> MCP.</li>
+      </ul>
+    </section>
+
+    <footer>
+      Siguiente paso: elegí el winner (o pelealo). Recién ahí va el deep-dive con checklist día a día, primeros 10 usuarios nombrados, y handoff a scaffold/build.
+      Archivos: <code>idea-shortlist-20260821-103500.html</code> · <code>idea-shortlist-20260821-103500.json</code>
+    </footer>
+  </div>
+</body>
+</html>

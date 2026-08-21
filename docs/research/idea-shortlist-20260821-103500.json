@@ -1,0 +1,223 @@
+{
+  "report_type": "shortlist",
+  "theme": "stripe",
+  "title": "Qué shippear en 14 días — solana-execution-mcp",
+  "generated_at": "2026-08-21T13:35:00Z",
+  "user_context": {
+    "prompt": "Empezar a shippear un producto, teniendo en cuenta AlphArena, DECENTRA y el portfolio, antes de investigación de mercado.",
+    "summary": [
+      "Solo builder en Corrientes, Cursor Ambassador, audiencia X en español.",
+      "Optimiza un ship usable en ~2 semanas, no un raise.",
+      "Elige terminar/monetizar solana-execution-mcp (npm, ~11 descargas/semana sostenidas).",
+      "Edge real: AlphArena live con dinero; Turnkey policy traps ya demostrados; DECENTRA es marca de varios prototipos x402/USDC, no un único producto maduro.",
+      "Helius MCP (204/sem) y Phantom MCP (760/sem) ya cubren lectura y firma. Competir ahí es perder."
+    ],
+    "clarifying_answers": [
+      {
+        "question": "¿Qué estás optimizando ahora?",
+        "answer": "Shippear algo usable en ~2 semanas (demo, usuarios reales, no landing)."
+      },
+      {
+        "question": "¿Terminar algo tuyo o producto nuevo?",
+        "answer": "Terminar/monetizar solana-execution-mcp."
+      },
+      {
+        "question": "Tema del reporte",
+        "answer": "stripe"
+      }
+    ]
+  },
+  "recommended_winner": "hardened-execution-mcp",
+  "ideas": [
+    {
+      "slug": "hardened-execution-mcp",
+      "name": "solana-execution-mcp v2 — firma con política que no se drena",
+      "rank": 1,
+      "status": "winner",
+      "one_liner": "El MCP que el nombre ya promete: un agente puede firmar en Solana, y Turnkey le niega las dos txs que hoy atraviesan el cap naive.",
+      "why_it_wins": "Es el único wedge donde tu código ya es la prueba, Helius/Phantom no enseñan el trap, y en 14 días hay un npm publish + 10 installs reales.",
+      "why_crypto_is_necessary": "Sin cadena no hay firma ni settlement. La política vive en el enclave de Turnkey, no en el prompt. Si sacás Solana, queda un linter de JSON.",
+      "kill_this_idea": "Si los builders se conforman con pegar SOLANA_PRIVATE_KEY en mcp.json, nadie paga un policy engine.",
+      "why_not_web2": "AWS IAM no firma SPL. Stripe no evalúa SystemProgram.createAccount. El problema es autorización de una clave Ed25519 contra una tx de Solana.",
+      "integration_first": "Integrar Turnkey Policy Engine + RPC de simulación. Cero programa on-chain nuevo.",
+      "scores": {
+        "founder_fit": 3,
+        "mvp_speed": 2,
+        "distribution_clarity": 2,
+        "market_pull": 2,
+        "revenue_path": 2
+      },
+      "competitors": [
+        {
+          "name": "Helius MCP (heliusWrite)",
+          "type": "direct",
+          "signal": "npm oficial, ~204 descargas/semana, transfers con keypair local",
+          "why_they_have_not_won": "Venden data + write. No documentan que un cap de transfer se bypasea con createAccount o con dos transfers en la misma tx."
+        },
+        {
+          "name": "Phantom MCP (@phantom/mcp-server)",
+          "type": "direct",
+          "signal": "~760 descargas/semana, device-code login, wallet nueva para el agente",
+          "why_they_have_not_won": "Wallet de agente financiable, no policy DSL contra instruction layout de Solana."
+        },
+        {
+          "name": "Turnkey Agentic Wallets (docs)",
+          "type": "adjacent",
+          "signal": "Ellos son el enclave. Docs de delegated access + Solana Policy Engine.",
+          "why_they_have_not_won": "No publican un MCP usable. Tu demo ya corre las 6 txs contra naive vs hardened."
+        }
+      ],
+      "oss_landscape": [
+        {
+          "name": "Tobiinsaurralde/turnkey-agent-wallet",
+          "signal": "Código propio, 6 escenarios reales contra Turnkey (6 ago 2026)",
+          "notes": "El MVP es mover esto a tools MCP y publicarlo bajo el paquete que ya existe."
+        },
+        {
+          "name": "Tobiinsaurralde/solana-execution-mcp",
+          "signal": "npm 1.0.0, 4 tools read-only, 11 descargas/semana",
+          "notes": "El nombre miente. Hoy es un wrapper de RPC + CoinGecko."
+        },
+        {
+          "name": "sendaifun/solana-mcp (solana-agent-kit)",
+          "signal": "Tomó el nombre solana-mcp en npm",
+          "notes": "Kit de agente amplio, no un policy gate."
+        }
+      ],
+      "mvp_checklist": [
+        "Mover turnkey-agent-wallet a este repo como tools: policy_status, simulate, sign_if_allowed, deny_reason",
+        "Shippear la policy hardened por defecto (createAccount + batched transfers = DENY)",
+        "Mantener las 4 tools de lectura; no competir con Helius en DAS/webhooks",
+        "Publicar 1.1.0 en npm y un post propio (no tutorial gratis de Turnkey)",
+        "10 installs: Cursor meetup NEA, Superteam ARG 28 ago, 5 DMs a gente que hoy pone private key en mcp.json"
+      ],
+      "gtm": {
+        "wedge": "Stop pasting a drainable key into mcp.json",
+        "first_ten_users": "Builders de agentes Solana en Cursor/Claude que ya usan x402 MCPs con SOLANA_PRIVATE_KEY; comunidad Superteam ARG; 2-3 contactos Turnkey si el post es del producto, no del vendor",
+        "channels": ["npm", "X @0xTobiasDev", "Superteam Argentina 28 ago", "Cursor ambassador NEA"],
+        "message_angle": "El cap de 0.1 SOL que todos escriben primero deja pasar createAccount y dos transfers. Este MCP no."
+      },
+      "risks": [
+        {
+          "risk": "Turnkey shippea su propio MCP y te vuelve un README.",
+          "mitigation": "Ser el template de policy Solana que su docs no tienen. Si gana Turnkey, el asset sigue sirviendo como caso de integración paga."
+        },
+        {
+          "risk": "Nadie instala un signer en 14 días por miedo a keys.",
+          "mitigation": "Demo que NUNCA broadcast. Solo pregunta si Turnkey firmaría. Eso ya lo tenés."
+        }
+      ]
+    },
+    {
+      "slug": "x402-paywall-read-mcp",
+      "name": "Paywall x402 sobre las 4 tools actuales",
+      "rank": 2,
+      "status": "runner_up",
+      "one_liner": "Cobrar USDC por get_sol_price / balances y aplicar al micro-grant x402.",
+      "why_it_wins": "No gana. Queda segunda porque es la línea que ya tenías autorizada y se shippea rápido.",
+      "why_crypto_is_necessary": "x402 es settlement sin cuenta. Pero las tools que cobrarias son wrappers de APIs gratis.",
+      "kill_this_idea": "Helius ya cobra USDC por signup de su MCP. CoinGecko es gratis. 11 descargas/semana no son un mercado pagador.",
+      "why_not_web2": "Un API key de Helius es Web2 con cripto de marketing. El paywall solo tiene sentido sobre un tool que no tenga sustituto gratis.",
+      "integration_first": "Integrar @x402/mcp o Civic x402-mcp. No hay protocolo nuevo.",
+      "scores": {
+        "founder_fit": 2,
+        "mvp_speed": 2,
+        "distribution_clarity": 1,
+        "market_pull": 1,
+        "revenue_path": 2
+      },
+      "competitors": [
+        {
+          "name": "Helius MCP signup autopay USDC",
+          "type": "direct",
+          "signal": "Billing nativo en heliusAccount, plan Agent",
+          "why_they_have_not_won": "Ganaron la data. Un paywall sobre 4 tools peores no los mueve."
+        },
+        {
+          "name": "BlockRun, Solinkify, pr402, Nonagon, Nory",
+          "type": "adjacent",
+          "signal": "MCPs x402 buyer-side, todos piden private key",
+          "why_they_have_not_won": "Son wallets de pago, no vendedores de datos de Solana."
+        }
+      ],
+      "oss_landscape": [
+        {
+          "name": "civicteam/x402-mcp",
+          "signal": "middleware para cobrar tool calls",
+          "notes": "Útil el día que tengas un tool que valga 0.001 USDC."
+        },
+        {
+          "name": "x402-foundation/x402 (@x402/mcp)",
+          "signal": "SDK oficial Linux Foundation",
+          "notes": "El grant de 3k, si sigue vivo, es un lado. No es el producto."
+        }
+      ],
+      "mvp_checklist": [
+        "NO paywallear get_sol_price",
+        "Si se hace x402, que sea sobre sign_if_allowed o simulate de txs complejas, después del v2"
+      ],
+      "gtm": {
+        "wedge": "Grant farming disfrazado de producto",
+        "first_ten_users": "Nadie que ya tiene Helius",
+        "channels": ["x402 Foundation form"],
+        "message_angle": "No usar este ángulo como ship de 14 días"
+      },
+      "risks": [
+        {
+          "risk": "El grant se cobra y el paquete sigue en 11 downloads.",
+          "mitigation": "Tratar x402 como feature del winner, no como producto."
+        }
+      ]
+    },
+    {
+      "slug": "cursor-solana-dx-mcp",
+      "name": "MCP DX para Cursor: simulate / decode / failed-tx sin API key",
+      "rank": 3,
+      "status": "considered",
+      "one_liner": "Agregar tools de debug al MCP actual y distribuirlo por embajador Cursor + Superteam ARG.",
+      "why_it_wins": "No gana. Es el ship más rápido y con la mejor distribución tuya, pero el producto ya lo shippeó Helius.",
+      "why_crypto_is_necessary": "Estás leyendo estado on-chain. Pasa el test, débilmente: Helius + RPC pública ya lo hacen.",
+      "kill_this_idea": "helius-mcp tiene simulate, parse, DAS, webhooks y write. 204 vs 11 descargas. 'Sin API key' es correr contra el RPC público rate-limited.",
+      "why_not_web2": "No aplica. Esto SÍ se puede reemplazar con curl a un RPC y un API key.",
+      "integration_first": "Helius DAS / simulate RPC. Serías un wrapper más flaco.",
+      "scores": {
+        "founder_fit": 2,
+        "mvp_speed": 3,
+        "distribution_clarity": 3,
+        "market_pull": 1,
+        "revenue_path": 1
+      },
+      "competitors": [
+        {
+          "name": "helius-mcp",
+          "type": "direct",
+          "signal": "Producto oficial, 10 tools, system prompts, plugin Claude",
+          "why_they_have_not_won": "Ganaron. Este idea asume que no."
+        }
+      ],
+      "oss_landscape": [
+        {
+          "name": "helius-labs/core-ai",
+          "signal": "Activo, 2.1.0 en junio 2026",
+          "notes": "No forks. Integra o perdés."
+        }
+      ],
+      "mvp_checklist": [
+        "No construir un Helius peor",
+        "Si hace falta debug, llamar helius-mcp desde el host, no reimplementarlo"
+      ],
+      "gtm": {
+        "wedge": "Distribución sin producto",
+        "first_ten_users": "Meetup Cursor NEA — instalarían Helius si se lo mostrás",
+        "channels": ["Cursor ambassador"],
+        "message_angle": "Usar la distribución para el winner, no para este clone"
+      },
+      "risks": [
+        {
+          "risk": "Dos semanas de tools que nadie elige frente a npx helius-mcp@latest",
+          "mitigation": "Descartar ahora."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Validación — Agent Card sobre OmniHood</title>
+  <style>
+    :root { --bg:#f6f9fc; --card:#fff; --ink:#0a2540; --muted:#425466; --accent:#635bff; --soft:#eeedfe; --bad:#c41e3a; --ok:#0d9488; --shadow:0 12px 32px rgba(10,37,64,.08); }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; }
+    .wrap { max-width:820px; margin:0 auto; padding:40px 20px 72px; }
+    .card { background:var(--card); border-radius:16px; padding:28px 32px; box-shadow:var(--shadow); margin-bottom:16px; }
+    .kicker { color:var(--accent); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:8px 0 10px; font-size:28px; letter-spacing:-.03em; }
+    h2 { font-size:18px; margin:0 0 10px; }
+    .verdict { background:var(--soft); border-left:4px solid var(--accent); padding:12px 14px; border-radius:0 12px 12px 0; }
+    .bad { color:var(--bad); } .ok { color:var(--ok); }
+    ul { margin:8px 0 0; padding-left:18px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th,td { text-align:left; padding:8px; border-bottom:1px solid #e6ebf1; vertical-align:top; }
+    th { color:var(--muted); font-size:12px; text-transform:uppercase; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="kicker">Validate idea · 21 ago 2026</div>
+      <h1>PIVOT — no construyas el Visa de OmniHood</h1>
+      <p>La idea (card virtual con límites para que un agente pague en internet) es real y 2026. El paquete que te ofrecieron (hacerlo “basado en OmniHood” para darles credibilidad a cambio de reposts) es el feature que les falta, no tu compañía.</p>
+      <div class="verdict"><strong>Veredicto:</strong> no-go al producto tal cual. Pivot: vos sos la capa de policy + MCP; el BIN lo pone un issuer que ya cobra. OmniHood es canal, no infraestructura. Confianza 0.7.</div>
+    </div>
+
+    <div class="card">
+      <h2>Scorecard</h2>
+      <table>
+        <tr><th>Eje</th><th>Nota</th><th></th></tr>
+        <tr><td>Demanda de la categoría</td><td>Fuerte</td><td>Alchemy+Visa (jun 2026), Stripe Issuing for agents, GetPlu MCP, Cryptocardium, Ramp, Slash, Crossmint.</td></tr>
+        <tr><td>Demanda de TU producto</td><td>Débil</td><td>Un founder aliado te lo pidió. Eso es partner, no cliente pagando. Rubric: “I’d use that” / “te reposteo” = señal floja.</td></tr>
+        <tr><td>Competencia</td><td>Saturada</td><td>Equipos con Visa/Mastercard ya shippearon la versión buena. No-go criterion #2.</td></tr>
+        <tr><td>Feasibility</td><td>Meses si emitís vos; días si wrappeás</td><td>Stripe Issuing no está para una empresa argentina. Emitir Visa requiere BIN sponsor + KYC. GetPlu/Cryptocardium ya dan MCP.</td></tr>
+        <tr><td>Crypto necesario</td><td>Flojo en el pitch original</td><td>La card es Visa. Sin chain sigue existiendo (Stripe/Ramp). Crypto solo vale si el funding es USDC en Solana y la policy vive off-prompt.</td></tr>
+        <tr><td>OmniHood como stack</td><td>Riesgo alto</td><td>El sitio promete Visa virtual; los contadores de spend/swaps están en raya. CA de $SDEV y AlphArena sin par en DexScreener. No hay prueba pública de un cargo real.</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Qué sí queda (pivot)</h2>
+      <p><strong>Producto:</strong> MCP en Cursor/Claude: el agente pide una card de $X, MCC lock, un solo cargo. La policy (el trap que ya demostraste en Turnkey) decide si se emite. El PAN lo emite GetPlu o Cryptocardium. Funding: USDC Solana → issuer.</p>
+      <p><strong>OmniHood:</strong> GTM. Reposts, traders, “powered by” si y solo si esta semana te muestran <em>un cargo live</em> en un merchant real y te dan API. Si no pueden, el Visa de ellos es landing.</p>
+      <p><strong>Dueño:</strong> tu repo, tu marca, tus usuarios. Ellos no se quedan con el producto a cambio de un RT.</p>
+    </div>
+
+    <div class="card">
+      <h2>Sprint 7 días (validate, no build)</h2>
+      <ul>
+        <li>Día 1 — Sebas: cargo live + nombre del BIN + API. Por escrito: qué poseés vos.</li>
+        <li>Día 2 — Emití una card de verdad con GetPlu o Cryptocardium. Un cargo de $1 a un SaaS. Si no sale, el pivot también muere.</li>
+        <li>Día 3-4 — 5 conversaciones: “¿cómo paga tu agente el checkout hoy?” No “¿usarías mi card?”</li>
+        <li>Día 5 — MCP mínimo: <code>issue_card</code>, <code>card_status</code>, <code>revoke</code>. Encima del issuer, no de OmniHood.</li>
+        <li>Día 6-7 — 10 personas del círculo de traders/ClawPump instalan. Si nadie completa un pago, no-go.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
