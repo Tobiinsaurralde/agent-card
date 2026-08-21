@@ -131,7 +131,7 @@ export function App() {
   const ttlLabel =
     card?.policy.ttlSeconds != null
       ? `${Math.round(card.policy.ttlSeconds / 3600)} H`
-      : "SIN TTL";
+      : "NO TTL";
 
   function buildPolicy(): CardPolicy {
     const budgetCents = usdToCents(config.budget);
@@ -333,12 +333,18 @@ export function App() {
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
-              <CreditCard className="size-4" aria-hidden="true" />
-            </span>
-            <span className="font-mono text-sm font-semibold tracking-tight">
-              agent-card
-            </span>
+            <a
+              href="/"
+              aria-label="Volver a la página principal"
+              className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+                <CreditCard className="size-4" aria-hidden="true" />
+              </span>
+              <span className="font-mono text-sm font-semibold tracking-tight">
+                agent-card
+              </span>
+            </a>
             <Chip tone="warning" dot={false}>
               <FlaskConical className="size-3" aria-hidden="true" />
               <span className="hidden sm:inline">SIMULACIÓN · SIN DINERO REAL</span>
@@ -406,7 +412,7 @@ export function App() {
               last4={last4}
               status={cardStatus}
               ttlLabel={ttlLabel}
-              presetLabel={issuedPreset === "safe" ? "SEGURA" : "PERMISIVA"}
+              presetLabel={issuedPreset === "safe" ? "SAFE" : "PERMISSIVE"}
             />
 
             {card !== null && (

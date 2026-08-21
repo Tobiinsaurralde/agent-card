@@ -27,7 +27,7 @@ export function VirtualCard({
         className="flex aspect-[1.586] w-full items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/40"
       >
         <p className="text-xs font-medium tracking-wide text-muted-foreground">
-          SIN EMITIR
+          NOT ISSUED
         </p>
       </div>
     );
@@ -40,7 +40,7 @@ export function VirtualCard({
       className="relative aspect-[1.586] w-full overflow-hidden rounded-2xl p-4 text-white shadow-lg sm:p-5"
       style={{
         background:
-          "radial-gradient(120% 90% at 15% 0%, oklch(0.32 0.05 262) 0%, transparent 55%), linear-gradient(135deg, oklch(0.23 0.03 265) 0%, oklch(0.15 0.02 250) 100%)",
+          "radial-gradient(120% 90% at 15% 0%, oklch(0.32 0.05 262) 0%, transparent 55%), radial-gradient(55% 45% at 90% 95%, oklch(0.75 0.11 92 / 7%) 0%, transparent 70%), linear-gradient(135deg, oklch(0.23 0.03 265) 0%, oklch(0.15 0.02 250) 100%)",
       }}
     >
       <div
@@ -72,17 +72,17 @@ export function VirtualCard({
           <Wifi aria-hidden="true" className="size-4 rotate-90 text-white/60" />
         </div>
 
-        <p className="font-mono text-base tracking-[0.18em] sm:text-lg" aria-label={`Tarjeta terminada en ${last4}`}>
+        <p className="font-mono text-base tracking-[0.18em] sm:text-lg" aria-label={`Card ending in ${last4}`}>
           ••••&nbsp;&nbsp;••••&nbsp;&nbsp;••••&nbsp;&nbsp;{last4}
         </p>
 
         <div className="flex items-end justify-between text-[10px] tracking-wider text-white/70">
           <div>
-            <p className="mb-0.5 text-[9px] text-white/45">TITULAR</p>
-            <p className="font-mono font-medium text-white/90">AGENTE · TASK-DEMO</p>
+            <p className="mb-0.5 text-[9px] text-white/45">HOLDER</p>
+            <p className="font-mono font-medium text-white/90">AGENT · TASK-DEMO</p>
           </div>
           <div className="text-right">
-            <p className="mb-0.5 text-[9px] text-white/45">VIDA</p>
+            <p className="mb-0.5 text-[9px] text-white/45">TTL</p>
             <p className="font-mono font-medium text-white/90">{ttlLabel}</p>
           </div>
         </div>
@@ -98,7 +98,7 @@ export function VirtualCard({
                 : "border-white/70 text-white/90",
             )}
           >
-            {status === "kill" ? "KILL" : "CERRADA"}
+            {status === "kill" ? "KILL" : "CLOSED"}
           </span>
         </div>
       )}

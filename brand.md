@@ -28,6 +28,15 @@ Regla: todo monto, código de decisión, PAN y contador va en mono. Todo lo dem�
 
 Grises fríos (matiz ~260), un solo acento azul, y semánticos solo con significado semántico.
 
+### Dupla de marca: azul + dorado
+
+El azul es el color de **todo lo interactivo e informacional**: foco, enlaces, selección, iconos de
+feature. El dorado (`gold`, oklch `0.85 0.13 92` en oscuro / `0.58 0.12 90` en claro) es el color de
+**marca pura** y aparece solo en cuatro lugares: los kickers de sección (mono, tracking ancho), el
+highlight del H1, el chip EMV de la tarjeta y un brillo radial ≤8% de opacidad. Reglas duras del
+dorado: nunca un relleno grande, nunca un botón, nunca texto largo. Si el dorado aparece en más de
+cuatro lugares por pantalla, se pasó de la raya.
+
 ### Oscuro (preferido)
 
 | Token | oklch | Uso |
