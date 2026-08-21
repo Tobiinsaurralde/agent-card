@@ -338,9 +338,11 @@ export function App() {
               aria-label="Volver a la página principal"
               className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
-                <CreditCard className="size-4" aria-hidden="true" />
-              </span>
+              <img
+                src="/logo-light.png"
+                alt=""
+                className="size-8 shrink-0 rounded-lg border border-border"
+              />
               <span className="font-mono text-sm font-semibold tracking-tight">
                 agent-card
               </span>

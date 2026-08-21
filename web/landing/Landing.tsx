@@ -3,7 +3,6 @@ import {
   ArrowRight,
   Ban,
   Clock,
-  CreditCard,
   FileText,
   FlaskConical,
   Languages,
@@ -98,9 +97,11 @@ export function Landing() {
             href="/"
             className={cx("flex items-center gap-2.5 rounded-lg", focusRing)}
           >
-            <span className="flex size-8 items-center justify-center rounded-lg bg-accent-soft text-accent">
-              <CreditCard className="size-4" aria-hidden="true" />
-            </span>
+            <img
+              src="/logo-light.png"
+              alt=""
+              className="size-8 rounded-lg border border-border"
+            />
             <span className="font-mono text-sm font-semibold tracking-tight">
               agent-card
             </span>
@@ -477,9 +478,11 @@ export function Landing() {
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 md:flex-row md:items-center md:justify-between md:px-6">
           <div className="flex items-center gap-2.5">
-            <span className="flex size-7 items-center justify-center rounded-md bg-accent-soft text-accent">
-              <CreditCard className="size-3.5" aria-hidden="true" />
-            </span>
+            <img
+              src="/logo-light.png"
+              alt=""
+              className="size-7 rounded-md border border-border"
+            />
             <span className="font-mono text-xs font-semibold">agent-card</span>
           </div>
           <p className="max-w-md text-xs leading-relaxed text-muted-foreground">

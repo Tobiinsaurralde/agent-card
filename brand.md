@@ -15,6 +15,13 @@ momento heroico del producto no es un pago aprobado — es un rechazo con un mot
 - La honestidad es parte de la marca: si es una simulación, se dice arriba y en grande.
 - Nunca prometer lo que hace el emisor. Nosotros decidimos; el rail cobra.
 
+## Logo
+
+Robot + tarjeta + escudo + candado, con el degradé azul→dorado de la marca. Dos versiones en
+`public/`: `logo.png` (fondo oscuro, para redes y avatares) y `logo-light.png` (fondo claro, la que
+usa el sitio: favicon y marca de nav/footer, siempre como tile redondeado con borde `border`).
+El logo no se recolorea ni se estira; a menos de 24px se usa solo el favicon.
+
 ## Tipografía
 
 | Uso | Fuente | Notas |
