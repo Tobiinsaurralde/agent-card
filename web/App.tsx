@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
-  AlertTriangle,
   Ban,
   CheckCircle2,
   CreditCard,
+  FlaskConical,
   Moon,
+  Play,
   RotateCcw,
   ShieldCheck,
   Sun,
+  Zap,
 } from "lucide-react";
 import { permissivePolicy, safePolicy } from "../src/defaults.js";
 import { fmt } from "../src/policy.js";
@@ -22,7 +24,9 @@ import {
   type LogRow,
   type ScenarioDef,
 } from "./simulate.js";
-import { Badge, Button, Checkbox, Field, Input, Panel, Select } from "./ui.js";
+import { Button, Checkbox, Chip, Field, Input, Panel, Segmented, Select, cx } from "./ui.js";
+import { VirtualCard, type CardVisualStatus } from "./components/VirtualCard.js";
+import { Ledger } from "./components/Ledger.js";
 
 type Preset = "safe" | "permissive";
 
@@ -42,8 +46,7 @@ interface Attempt {
   dayOffset: string;
 }
 
-interface Comparison {
-  def: ScenarioDef;
+interface Verdict {
   safeCents: number;
   permissiveCents: number;
 }
@@ -74,18 +77,25 @@ function useTheme() {
   return { dark, toggle: () => setDark((d) => !d) };
 }
 
+function randomLast4(): string {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
 export function App() {
   const { dark, toggle } = useTheme();
   const [preset, setPreset] = useState<Preset>("safe");
   const [config, setConfig] = useState<Config>(initialConfig);
   const [attempt, setAttempt] = useState<Attempt>(initialAttempt);
   const [card, setCard] = useState<ControlledCard | null>(null);
+  const [issuedPreset, setIssuedPreset] = useState<Preset>("safe");
+  const [last4, setLast4] = useState<string>("0000");
   const [rows, setRows] = useState<LogRow[]>([]);
   const [errors, setErrors] = useState<Partial<Record<keyof Config, string>>>({});
   const [attemptError, setAttemptError] = useState<string | undefined>(undefined);
   const [fatal, setFatal] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [comparison, setComparison] = useState<Comparison | null>(null);
+  const [verdicts, setVerdicts] = useState<Partial<Record<string, Verdict>>>({});
+  const [liveMessage, setLiveMessage] = useState("");
 
   const budgetRef = useRef<HTMLInputElement>(null);
   const merchantRef = useRef<HTMLInputElement>(null);
@@ -98,12 +108,30 @@ export function App() {
         .reduce((sum, r) => sum + r.amountCents, 0),
     [rows],
   );
+  const approvedCount = rows.filter((r) => r.approved).length;
+  const rejectedCount = rows.length - approvedCount;
 
   const capCents = card?.policy.lifetimeCents ?? null;
-  const capUsage =
+  const capPct =
     capCents !== null && capCents > 0
       ? Math.min(100, Math.round((approvedCents / capCents) * 100))
       : null;
+  const availableCents =
+    capCents !== null ? Math.max(0, capCents - approvedCents) : null;
+
+  const cardStatus: CardVisualStatus =
+    card === null
+      ? "activa"
+      : card.state.killed
+        ? "kill"
+        : card.state.closed || card.state.taskComplete
+          ? "cerrada"
+          : "activa";
+
+  const ttlLabel =
+    card?.policy.ttlSeconds != null
+      ? `${Math.round(card.policy.ttlSeconds / 3600)} H`
+      : "SIN TTL";
 
   function buildPolicy(): CardPolicy {
     const budgetCents = usdToCents(config.budget);
@@ -124,7 +152,6 @@ export function App() {
   async function handleIssue(event: FormEvent) {
     event.preventDefault();
     setAttemptError(undefined);
-    setComparison(null);
 
     const budgetCents = usdToCents(config.budget);
     const perTxCents =
@@ -165,9 +192,12 @@ export function App() {
       const funded = (budgetCents ?? 0) * 5;
       const fresh = await openCard(policy, funded, new Date());
       setCard(fresh);
+      setIssuedPreset(preset);
+      setLast4(randomLast4());
       setRows([]);
       setFatal(null);
       setAttempt((a) => ({ ...a, merchant: config.merchant.trim() || a.merchant }));
+      setLiveMessage("Tarjeta emitida.");
     } catch (error) {
       setFatal(error instanceof Error ? error.message : "Error desconocido.");
     } finally {
@@ -200,6 +230,11 @@ export function App() {
         rows.length + 1,
       );
       setRows((prev) => [...prev, row]);
+      setLiveMessage(
+        row.approved
+          ? `Cobro de ${fmt(row.amountCents)} en ${row.merchant} aprobado.`
+          : `Cobro de ${fmt(row.amountCents)} en ${row.merchant} rechazado: ${row.code}.`,
+      );
     } catch (error) {
       setFatal(error instanceof Error ? error.message : "Error desconocido.");
     } finally {
@@ -235,13 +270,20 @@ export function App() {
 
       const live = preset === "safe" ? safeSim : permissiveSim;
       setCard(live.card);
+      setIssuedPreset(preset);
+      setLast4(randomLast4());
       setRows(live.rows);
-      setComparison({
-        def,
-        safeCents: safeSim.approvedCents,
-        permissiveCents: permissiveSim.approvedCents,
-      });
+      setVerdicts((prev) => ({
+        ...prev,
+        [def.id]: {
+          safeCents: safeSim.approvedCents,
+          permissiveCents: permissiveSim.approvedCents,
+        },
+      }));
       setFatal(null);
+      setLiveMessage(
+        `Escenario ${def.name}: la config permisiva aprobó ${fmt(permissiveSim.approvedCents)}, los defaults seguros ${fmt(safeSim.approvedCents)}.`,
+      );
     } catch (error) {
       setFatal(error instanceof Error ? error.message : "Error desconocido.");
     } finally {
@@ -253,12 +295,14 @@ export function App() {
     if (card === null) return;
     await card.completeTask();
     setRows((prev) => [...prev]);
+    setLiveMessage("Tarea marcada como terminada. La tarjeta quedó cerrada.");
   }
 
   async function handleKill() {
     if (card === null) return;
     await card.kill();
     setRows((prev) => [...prev]);
+    setLiveMessage("Kill switch activado. Todo cobro futuro se rechaza.");
   }
 
   function handleReset() {
@@ -266,154 +310,256 @@ export function App() {
     setRows([]);
     setErrors({});
     setAttemptError(undefined);
-    setComparison(null);
+    setVerdicts({});
     setFatal(null);
     setConfig(initialConfig);
     setAttempt(initialAttempt);
+    setLiveMessage("");
   }
+
+  const quickFills: Array<{ label: string; patch: Partial<Attempt> }> = [
+    { label: "Otro merchant", patch: { merchant: "casino-online" } },
+    { label: "Moneda EUR", patch: { currency: "EUR" } },
+    { label: "30 días después", patch: { dayOffset: "30" } },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Los lectores de pantalla anuncian cada decisión sin mover el foco. */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {liveMessage}
+      </p>
+
       <header className="border-b border-border">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
-            <CreditCard className="size-5 text-foreground" aria-hidden="true" />
-            <span className="font-mono text-sm font-semibold">agent-card</span>
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+              <CreditCard className="size-4" aria-hidden="true" />
+            </span>
+            <span className="font-mono text-sm font-semibold tracking-tight">
+              agent-card
+            </span>
+            <Chip tone="warning" dot={false}>
+              <FlaskConical className="size-3" aria-hidden="true" />
+              <span className="hidden sm:inline">SIMULACIÓN · SIN DINERO REAL</span>
+              <span className="sm:hidden">SIMULACIÓN</span>
+            </Chip>
           </div>
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
-            className="inline-flex size-10 items-center justify-center rounded-md border border-border text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            {dark ? (
-              <Sun className="size-4" aria-hidden="true" />
-            ) : (
-              <Moon className="size-4" aria-hidden="true" />
-            )}
-          </button>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <a
+              href="https://github.com/Tobiinsaurralde/agent-card"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Repositorio en GitHub"
+              className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <GithubMark className="size-4" />
+            </a>
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+              className="inline-flex size-10 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              {dark ? (
+                <Sun className="size-4" aria-hidden="true" />
+              ) : (
+                <Moon className="size-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12 lg:px-8">
-        <div className="max-w-prose space-y-4">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-            Defaults seguros para tarjetas de agentes
+      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
+        <div className="max-w-2xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+            La tarjeta que sabe decir que no.
           </h1>
-          <p className="text-base text-muted-foreground">
-            Un agente de IA llega al checkout y se traba en el pago. La solución
-            es darle una tarjeta virtual propia — pero los límites que trae el
-            proveedor tienen agujeros. Probá acá qué cobros pasan y cuáles no.
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">
+            Defaults seguros para agentes de IA que compran solos. Configurá la
+            política, intentá cobros y mirá exactamente qué se rechaza y por qué.
+            El emisor es un mock local: esto mide la política, no el rail.
           </p>
-          <div className="flex items-start gap-2 rounded-lg border border-border bg-muted p-3">
-            <AlertTriangle
-              className="mt-0.5 size-4 shrink-0 text-foreground"
-              aria-hidden="true"
-            />
-            <p className="text-xs text-foreground">
-              Esto es una simulación. El emisor es un mock local: no hay tarjeta
-              real y no se mueve un peso. Mide la política, no el rail.
-            </p>
-          </div>
         </div>
 
         {fatal !== null && (
           <div
             role="alert"
-            className="mt-8 flex flex-col items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4"
+            className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-destructive/35 bg-destructive-soft p-4"
           >
-            <div className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="size-4" aria-hidden="true" />
-              <p className="text-sm font-medium">No se pudo emitir la tarjeta</p>
-            </div>
+            <p className="text-sm font-medium text-destructive">
+              No se pudo emitir la tarjeta
+            </p>
             <p className="text-xs text-muted-foreground">{fatal}</p>
-            <Button variant="secondary" onClick={handleReset}>
+            <Button variant="outline" onClick={handleReset}>
               Empezar de nuevo
             </Button>
           </div>
         )}
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-1">
-            <Panel
-              title="Configuración de la tarjeta"
-              description="Elegí qué reglas se aplican antes de mandar el cobro al rail."
-            >
-              <fieldset className="mb-6">
-                <legend className="mb-2 text-xs font-medium text-muted-foreground">
-                  Perfil de política
-                </legend>
-                <div className="grid grid-cols-2 gap-2">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+          {/* ─── Riel izquierdo: el objeto y su política ─── */}
+          <div className="space-y-5">
+            <VirtualCard
+              issued={card !== null}
+              last4={last4}
+              status={cardStatus}
+              ttlLabel={ttlLabel}
+              presetLabel={issuedPreset === "safe" ? "SEGURA" : "PERMISIVA"}
+            />
+
+            {card !== null && (
+              <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Comprometido
+                  </span>
+                  <span className="num text-xl font-semibold text-foreground">
+                    {fmt(approvedCents)}
+                  </span>
+                </div>
+                {capCents !== null ? (
+                  <div className="space-y-1.5">
+                    <div
+                      role="progressbar"
+                      aria-valuenow={capPct ?? 0}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label="Consumo del cap acumulado"
+                      className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                    >
+                      <div
+                        className={cx(
+                          "h-full w-full origin-left rounded-full transition-transform duration-300 ease-out",
+                          (capPct ?? 0) >= 100
+                            ? "bg-destructive"
+                            : (capPct ?? 0) >= 80
+                              ? "bg-warning"
+                              : "bg-accent",
+                        )}
+                        style={{ transform: `scaleX(${(capPct ?? 0) / 100})` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>
+                        Disponible{" "}
+                        <span className="num font-medium text-foreground">
+                          {fmt(availableCents ?? 0)}
+                        </span>
+                      </span>
+                      <span className="num">cap {fmt(capCents)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs font-medium text-destructive">
+                    Sin cap acumulado: el gasto total no tiene techo.
+                  </p>
+                )}
+                <div className="grid grid-cols-2 gap-2 border-t border-border pt-3">
                   <Button
-                    variant={preset === "safe" ? "primary" : "ghost"}
-                    onClick={() => setPreset("safe")}
-                    aria-pressed={preset === "safe"}
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCompleteTask}
+                    disabled={busy || card.state.taskComplete}
                   >
-                    <ShieldCheck className="size-4" aria-hidden="true" />
-                    Seguros
+                    <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                    {card.state.taskComplete ? "Tarea terminada" : "Terminar tarea"}
                   </Button>
                   <Button
-                    variant={preset === "permissive" ? "primary" : "ghost"}
-                    onClick={() => setPreset("permissive")}
-                    aria-pressed={preset === "permissive"}
+                    variant="danger"
+                    size="sm"
+                    onClick={handleKill}
+                    disabled={busy || card.state.killed}
                   >
-                    Permisiva
+                    <Ban className="size-3.5" aria-hidden="true" />
+                    Kill switch
                   </Button>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">
+              </div>
+            )}
+
+            <Panel
+              title="Política"
+              description="Las reglas que se evalúan antes de que el cobro llegue al rail."
+            >
+              <div className="mb-5 space-y-2">
+                <Segmented
+                  label="Perfil de política"
+                  value={preset}
+                  onChange={setPreset}
+                  options={[
+                    {
+                      value: "safe",
+                      label: (
+                        <>
+                          <ShieldCheck className="size-3.5" aria-hidden="true" />
+                          Segura
+                        </>
+                      ),
+                    },
+                    {
+                      value: "permissive",
+                      label: (
+                        <>
+                          <Zap className="size-3.5" aria-hidden="true" />
+                          Permisiva
+                        </>
+                      ),
+                    },
+                  ]}
+                />
+                <p className="text-xs leading-relaxed text-muted-foreground">
                   {preset === "safe"
                     ? "Cap acumulado y TTL obligatorios, allowlist de merchant, cierre al terminar la tarea."
-                    : "Solo cap por transacción. Es lo que escribe todo el mundo primero, y lo que el proveedor acepta como válido."}
+                    : "Solo cap por transacción. Es lo que escribe todo el mundo primero — y lo que el proveedor acepta como válido."}
                 </p>
-              </fieldset>
+              </div>
 
               <form onSubmit={handleIssue} className="space-y-4">
-                <Field
-                  id="budget"
-                  label="Presupuesto total (USD)"
-                  required
-                  hint="El techo acumulado de la tarea."
-                  error={errors.budget}
-                >
-                  <Input
+                <div className="grid grid-cols-2 gap-3">
+                  <Field
                     id="budget"
-                    ref={budgetRef}
-                    inputMode="decimal"
-                    value={config.budget}
-                    placeholder="10"
-                    spellCheck={false}
-                    aria-invalid={errors.budget !== undefined ? "true" : undefined}
-                    aria-describedby={
-                      errors.budget !== undefined ? "budget-error" : "budget-hint"
-                    }
-                    onChange={(e) =>
-                      setConfig((c) => ({ ...c, budget: e.target.value }))
-                    }
-                  />
-                </Field>
-
-                <Field
-                  id="perTx"
-                  label="Cap por transacción (USD)"
-                  hint="Vacío = todo el presupuesto en un solo cargo."
-                  error={errors.perTx}
-                >
-                  <Input
-                    id="perTx"
-                    ref={perTxRef}
-                    inputMode="decimal"
-                    value={config.perTx}
-                    placeholder="10"
-                    spellCheck={false}
-                    aria-invalid={errors.perTx !== undefined ? "true" : undefined}
-                    aria-describedby={
-                      errors.perTx !== undefined ? "perTx-error" : "perTx-hint"
-                    }
-                    onChange={(e) =>
-                      setConfig((c) => ({ ...c, perTx: e.target.value }))
-                    }
-                  />
-                </Field>
+                    label="Presupuesto (USD)"
+                    required
+                    error={errors.budget}
+                  >
+                    <Input
+                      id="budget"
+                      ref={budgetRef}
+                      inputMode="decimal"
+                      value={config.budget}
+                      placeholder="10"
+                      spellCheck={false}
+                      className="num"
+                      aria-invalid={errors.budget !== undefined ? "true" : undefined}
+                      aria-describedby={
+                        errors.budget !== undefined ? "budget-error" : undefined
+                      }
+                      onChange={(e) =>
+                        setConfig((c) => ({ ...c, budget: e.target.value }))
+                      }
+                    />
+                  </Field>
+                  <Field id="perTx" label="Cap por cobro (USD)" error={errors.perTx}>
+                    <Input
+                      id="perTx"
+                      ref={perTxRef}
+                      inputMode="decimal"
+                      value={config.perTx}
+                      placeholder="10"
+                      spellCheck={false}
+                      className="num"
+                      aria-invalid={errors.perTx !== undefined ? "true" : undefined}
+                      aria-describedby={
+                        errors.perTx !== undefined ? "perTx-error" : undefined
+                      }
+                      onChange={(e) =>
+                        setConfig((c) => ({ ...c, perTx: e.target.value }))
+                      }
+                    />
+                  </Field>
+                </div>
 
                 <Field
                   id="merchant"
@@ -432,13 +578,9 @@ export function App() {
                     value={config.merchant}
                     placeholder="api-credits"
                     spellCheck={false}
-                    aria-invalid={
-                      errors.merchant !== undefined ? "true" : undefined
-                    }
+                    aria-invalid={errors.merchant !== undefined ? "true" : undefined}
                     aria-describedby={
-                      errors.merchant !== undefined
-                        ? "merchant-error"
-                        : "merchant-hint"
+                      errors.merchant !== undefined ? "merchant-error" : "merchant-hint"
                     }
                     onChange={(e) =>
                       setConfig((c) => ({ ...c, merchant: e.target.value }))
@@ -463,13 +605,10 @@ export function App() {
                     value={config.ttlHours}
                     placeholder="24"
                     spellCheck={false}
-                    aria-invalid={
-                      errors.ttlHours !== undefined ? "true" : undefined
-                    }
+                    className="num"
+                    aria-invalid={errors.ttlHours !== undefined ? "true" : undefined}
                     aria-describedby={
-                      errors.ttlHours !== undefined
-                        ? "ttlHours-error"
-                        : "ttlHours-hint"
+                      errors.ttlHours !== undefined ? "ttlHours-error" : "ttlHours-hint"
                     }
                     onChange={(e) =>
                       setConfig((c) => ({ ...c, ttlHours: e.target.value }))
@@ -482,98 +621,115 @@ export function App() {
                   label="Un solo uso"
                   hint="La tarjeta muere después del primer cobro aprobado."
                   checked={config.singleUse}
-                  onChange={(next) =>
-                    setConfig((c) => ({ ...c, singleUse: next }))
-                  }
+                  onChange={(next) => setConfig((c) => ({ ...c, singleUse: next }))}
                 />
 
-                <div className="flex flex-col gap-2 pt-2 sm:flex-row">
-                  <Button type="submit" disabled={busy} aria-busy={busy}>
+                <div className="flex gap-2 pt-1">
+                  <Button type="submit" disabled={busy} aria-busy={busy} className="flex-1">
                     <CreditCard className="size-4" aria-hidden="true" />
-                    {card === null ? "Emitir la tarjeta" : "Emitir una nueva"}
+                    {card === null ? "Emitir tarjeta" : "Emitir una nueva"}
                   </Button>
-                  <Button variant="ghost" onClick={handleReset} disabled={busy}>
+                  <Button
+                    variant="ghost"
+                    onClick={handleReset}
+                    disabled={busy}
+                    aria-label="Reiniciar todo"
+                  >
                     <RotateCcw className="size-4" aria-hidden="true" />
-                    Reiniciar
                   </Button>
                 </div>
               </form>
             </Panel>
+
+            <p className="px-1 text-xs leading-relaxed text-muted-foreground">
+              La emisión, el BIN, el banco y el KYC se compran a un proveedor. Esta
+              capa solo decide si el cobro sale. El PAN nunca pasa por nuestro backend.
+            </p>
           </div>
 
-          <div className="space-y-6 lg:col-span-2">
+          {/* ─── Columna principal: actividad ─── */}
+          <div className="space-y-5">
+            {card !== null && (
+              <dl className="grid grid-cols-2 divide-border rounded-xl border border-border bg-card sm:grid-cols-4 sm:divide-x">
+                <StatCell label="Intentos" value={String(rows.length)} />
+                <StatCell label="Aprobados" value={String(approvedCount)} tone="success" />
+                <StatCell label="Rechazados" value={String(rejectedCount)} tone="destructive" />
+                <StatCell
+                  label="Disponible"
+                  value={availableCents !== null ? fmt(availableCents) : "Sin techo"}
+                  tone={availableCents === 0 ? "warning" : undefined}
+                />
+              </dl>
+            )}
+
             <Panel
-              title="Escenarios"
-              description="Los dos agujeros que importan, corridos con las dos configuraciones."
+              title="Ataques conocidos"
+              description="Los dos agujeros que importan, corridos contra ambas configuraciones a la vez."
             >
-              <div className="grid gap-3 sm:grid-cols-2">
-                {scenarioDefs.map((def) => (
-                  <div
-                    key={def.id}
-                    className="flex flex-col gap-3 rounded-md border border-border p-3"
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-foreground">
-                        {def.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
+              <div className="grid gap-3 md:grid-cols-2">
+                {scenarioDefs.map((def) => {
+                  const verdict = verdicts[def.id];
+                  return (
+                    <article
+                      key={def.id}
+                      className="flex flex-col gap-3 rounded-lg border border-border p-3.5"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-sm font-semibold text-foreground">
+                          {def.name}
+                        </h3>
+                        <span className="num shrink-0 text-xs text-muted-foreground">
+                          techo {fmt(def.intendedCapCents)}
+                        </span>
+                      </div>
+                      <p className="text-xs leading-relaxed text-muted-foreground">
                         {def.hypothesis}
                       </p>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleScenario(def)}
-                      disabled={busy}
-                      className="mt-auto"
-                    >
-                      Correr
-                    </Button>
-                  </div>
-                ))}
-              </div>
 
-              {comparison !== null && (
-                <div className="mt-4 space-y-2 rounded-md border border-border bg-muted p-3">
-                  <p className="text-xs font-medium text-foreground">
-                    {comparison.def.name} · techo pretendido{" "}
-                    {fmt(comparison.def.intendedCapCents)}
-                  </p>
-                  <dl className="grid gap-2 sm:grid-cols-2">
-                    <div className="flex items-baseline justify-between gap-2 rounded border border-border bg-background px-3 py-2">
-                      <dt className="text-xs text-muted-foreground">
-                        Config permisiva
-                      </dt>
-                      <dd className="font-mono text-sm font-semibold text-destructive">
-                        {fmt(comparison.permissiveCents)}
-                      </dd>
-                    </div>
-                    <div className="flex items-baseline justify-between gap-2 rounded border border-border bg-background px-3 py-2">
-                      <dt className="text-xs text-muted-foreground">
-                        Defaults seguros
-                      </dt>
-                      <dd className="font-mono text-sm font-semibold text-success">
-                        {fmt(comparison.safeCents)}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              )}
+                      {verdict !== undefined && (
+                        <dl className="animate-row-in space-y-1.5 rounded-md bg-muted/60 p-2.5">
+                          <VerdictRow
+                            label="Permisiva"
+                            cents={verdict.permissiveCents}
+                            capCents={def.intendedCapCents}
+                          />
+                          <VerdictRow
+                            label="Segura"
+                            cents={verdict.safeCents}
+                            capCents={def.intendedCapCents}
+                          />
+                        </dl>
+                      )}
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleScenario(def)}
+                        disabled={busy}
+                        className="mt-auto"
+                      >
+                        <Play className="size-3.5" aria-hidden="true" />
+                        {verdict === undefined ? "Correr ataque" : "Correr de nuevo"}
+                      </Button>
+                    </article>
+                  );
+                })}
+              </div>
             </Panel>
 
             {card === null ? (
-              <Panel title="Cobros" description="Todavía no hay tarjeta emitida.">
+              <Panel title="Terminal de cobros" description="Todavía no hay tarjeta emitida.">
                 <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-                  <CreditCard
-                    className="size-10 text-muted-foreground"
-                    aria-hidden="true"
-                  />
+                  <span className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                    <CreditCard className="size-5" aria-hidden="true" />
+                  </span>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
                       Emití una tarjeta para empezar
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Elegí un perfil de política a la izquierda, o corré uno de
-                      los escenarios de arriba.
+                      Elegí un perfil de política a la izquierda, o corré uno de los
+                      ataques de arriba: emiten y cobran solos.
                     </p>
                   </div>
                 </div>
@@ -581,85 +737,20 @@ export function App() {
             ) : (
               <>
                 <Panel
-                  title="Estado de la tarjeta"
-                  description={`Perfil ${preset === "safe" ? "seguro" : "permisivo"}.`}
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-baseline justify-between gap-4">
-                      <span className="text-xs text-muted-foreground">
-                        Aprobado
-                      </span>
-                      <span className="font-mono text-2xl font-semibold text-foreground">
-                        {fmt(approvedCents)}
-                      </span>
-                    </div>
-                    {capCents !== null ? (
-                      <div className="space-y-1.5">
-                        <div
-                          role="progressbar"
-                          aria-valuenow={capUsage ?? 0}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-label="Consumo del cap acumulado"
-                          className="h-2 w-full overflow-hidden rounded-full bg-muted"
-                        >
-                          <div
-                            className="h-full rounded-full bg-primary transition-[width] duration-300"
-                            style={{ width: `${capUsage ?? 0}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Cap acumulado {fmt(capCents)}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-xs font-medium text-destructive">
-                        Sin cap acumulado. El gasto total no tiene techo.
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="ghost"
-                        onClick={handleCompleteTask}
-                        disabled={busy || card.state.taskComplete}
-                      >
-                        {card.state.taskComplete
-                          ? "Tarea terminada"
-                          : "Marcar tarea terminada"}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={handleKill}
-                        disabled={busy || card.state.killed}
-                      >
-                        <Ban className="size-4" aria-hidden="true" />
-                        Kill switch
-                      </Button>
-                    </div>
-                  </div>
-                </Panel>
-
-                <Panel
-                  title="Intentar un cobro"
-                  description="Cambiá el merchant, la moneda o los días para probar cada regla."
+                  title="Terminal de cobros"
+                  description="Cambiá el merchant, la moneda o los días para gatillar cada regla."
                 >
                   <form onSubmit={handleAttempt} className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <Field
-                        id="amount"
-                        label="Monto (USD)"
-                        required
-                        error={attemptError}
-                      >
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <Field id="amount" label="Monto (USD)" required error={attemptError}>
                         <Input
                           id="amount"
                           inputMode="decimal"
                           value={attempt.amount}
                           placeholder="9"
                           spellCheck={false}
-                          aria-invalid={
-                            attemptError !== undefined ? "true" : undefined
-                          }
+                          className="num"
+                          aria-invalid={attemptError !== undefined ? "true" : undefined}
                           aria-describedby={
                             attemptError !== undefined ? "amount-error" : undefined
                           }
@@ -720,89 +811,122 @@ export function App() {
                           value={attempt.dayOffset}
                           placeholder="0"
                           spellCheck={false}
+                          className="num"
                           aria-describedby="dayOffset-hint"
                           onChange={(e) =>
-                            setAttempt((a) => ({
-                              ...a,
-                              dayOffset: e.target.value,
-                            }))
+                            setAttempt((a) => ({ ...a, dayOffset: e.target.value }))
                           }
                         />
                       </Field>
                     </div>
-                    <Button type="submit" disabled={busy} aria-busy={busy}>
-                      Intentar cobro
-                    </Button>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button type="submit" disabled={busy} aria-busy={busy}>
+                        Intentar cobro
+                      </Button>
+                      <span className="text-xs text-muted-foreground" aria-hidden="true">
+                        o probá:
+                      </span>
+                      {quickFills.map((quick) => (
+                        <Button
+                          key={quick.label}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setAttempt((a) => ({ ...a, ...quick.patch }))}
+                        >
+                          {quick.label}
+                        </Button>
+                      ))}
+                    </div>
                   </form>
                 </Panel>
 
                 <Panel
-                  title="Historial"
-                  description="Cada intento con el motivo exacto de la decisión."
+                  title="Libro mayor"
+                  description="Cada intento con el motivo exacto de la decisión. Lo más nuevo arriba."
                 >
-                  {rows.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-                      <p className="text-sm font-medium text-foreground">
-                        Todavía no hubo intentos
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Probá un cobro de USD 9 y después otro igual.
-                      </p>
-                    </div>
-                  ) : (
-                    <ol className="space-y-2">
-                      {rows.map((row) => (
-                        <li
-                          key={`${row.n}-${row.code}`}
-                          className="flex flex-wrap items-start gap-x-3 gap-y-1 rounded-md border border-border p-3"
-                        >
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {row.n}
-                          </span>
-                          <span className="font-mono text-sm font-medium text-foreground">
-                            {fmt(row.amountCents)}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {row.merchant} · {row.currency} · día {row.dayOffset}
-                          </span>
-                          <span className="ml-auto flex items-center gap-2">
-                            {row.approved ? (
-                              <CheckCircle2
-                                className="size-4 text-success"
-                                aria-hidden="true"
-                              />
-                            ) : (
-                              <Ban
-                                className="size-4 text-destructive"
-                                aria-hidden="true"
-                              />
-                            )}
-                            <Badge tone={row.approved ? "success" : "destructive"}>
-                              {row.approved ? "Aprobado" : "Rechazado"}
-                            </Badge>
-                          </span>
-                          <p className="w-full text-xs text-muted-foreground">
-                            <span className="font-mono">{row.code}</span> —{" "}
-                            {row.reason}
-                          </p>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
+                  <Ledger rows={rows} />
                 </Panel>
               </>
             )}
           </div>
         </div>
 
-        <footer className="mt-12 border-t border-border pt-6">
-          <p className="max-w-prose text-xs text-muted-foreground">
-            La emisión, el BIN, el banco y el KYC se compran a un proveedor. Esta
-            capa solo decide si el cobro sale. El PAN nunca pasa por nuestro
-            backend.
+        <footer className="mt-12 border-t border-border pt-5">
+          <p className="text-xs text-muted-foreground">
+            agent-card — capa de control con defaults seguros. Código en{" "}
+            <a
+              href="https://github.com/Tobiinsaurralde/agent-card"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+            >
+              GitHub
+            </a>
+            .
           </p>
         </footer>
       </main>
+    </div>
+  );
+}
+
+function GithubMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.15c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.77 1.05.77 2.12v3.15c0 .3.21.67.8.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
+    </svg>
+  );
+}
+
+function StatCell({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "success" | "destructive" | "warning" | undefined;
+}) {
+  return (
+    <div className="px-4 py-3">
+      <dt className="text-[11px] font-medium tracking-wide text-muted-foreground">
+        {label}
+      </dt>
+      <dd
+        className={cx(
+          "num mt-0.5 text-lg font-semibold",
+          tone === "success" && "text-success",
+          tone === "destructive" && "text-destructive",
+          tone === "warning" && "text-warning",
+          tone === undefined && "text-foreground",
+        )}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function VerdictRow({
+  label,
+  cents,
+  capCents,
+}: {
+  label: string;
+  cents: number;
+  capCents: number;
+}) {
+  const exceeded = cents > capCents;
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="flex items-baseline gap-2">
+        <span className="num text-xs font-semibold text-foreground">{fmt(cents)}</span>
+        <Chip tone={exceeded ? "destructive" : "success"}>
+          {exceeded ? "VULNERABLE" : "CONTUVO"}
+        </Chip>
+      </dd>
     </div>
   );
 }
