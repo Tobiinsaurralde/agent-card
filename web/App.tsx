@@ -361,6 +361,12 @@ export function App() {
             </Chip>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
+            <a
+              href="/panel.html"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:inline-flex"
+            >
+              Panel
+            </a>
             <button
               type="button"
               onClick={toggle}

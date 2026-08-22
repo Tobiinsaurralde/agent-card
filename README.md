@@ -37,6 +37,8 @@ Ver [`docs/spec.md`](docs/spec.md) para el mapa completo de la categoría y qué
 | Motor de policy + defaults seguros | listo, con tests |
 | Recibos con atribución por tarea | listo |
 | Harness de escenarios (mock) | listo |
+| Browser de checkout + captcha (Steel) | listo — prende `solveCaptcha` en la sesión |
+| Panel del usuario | listo — sobre el motor real, emisor mock |
 | Adaptador Interlace real | pendiente — necesita API key |
 | Servidor MCP | pendiente — a propósito, después de la medición real |
 | Medición con cargos reales | pendiente — es el próximo paso |
@@ -53,10 +55,19 @@ tiene sentido haber construido la fachada. Ver `docs/spec.md` §4.
 npm install
 npm test        # tests de la policy
 npm run harness # escenarios naive vs hardened
+npm run dev     # landing (/), panel (/panel.html), simulador (/simulador.html)
 ```
+
+El panel es la vista del humano: saldo, tarjetas por agente, recibos con el motivo exacto y kill
+switch global. Corre contra el motor real —cada aprobación y cada rechazo salen de `evaluate()`— con
+`MockProvider` como rail y `MockBrowser` como checkout. Cuando exista el adaptador de Interlace se
+reemplazan esas dos piezas y el panel no cambia.
 
 El harness corre contra `MockProvider`, que modela un emisor que aprueba todo mientras haya fondos.
 **Mide la policy, no el rail.** Los números que valen son los del proveedor real con cargos reales.
+
+El captcha del checkout lo resuelve Steel en la misma sesión del navegador. Copiá `.env.example` a
+`.env` y poné `STEEL_API_KEY`. Sin la key, `MockBrowser` simula la resolución para tests.
 
 ---
 
@@ -98,7 +109,11 @@ src/policy.ts    evaluate(): DENY gana, se evalúa server-side
 src/defaults.ts  safePolicy (el producto) / permissivePolicy (el control)
 src/provider.ts  interfaz CardProvider + MockProvider en memoria
 src/card.ts      ControlledCard: policy delante del rail, más recibos
+src/browser.ts   checkout en Steel: captcha prendido, eventos en el recibo
 harness/         escenarios y runner
+web/panel/       panel del usuario: store sobre el motor + UI
+web/landing/     landing del producto
+web/App.tsx      simulador de política
 docs/spec.md     spec, mapa de competidores y plan de medición
 docs/omnihood-analysis.md
 ```

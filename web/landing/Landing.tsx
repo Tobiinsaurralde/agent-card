@@ -220,10 +220,21 @@ export function Landing() {
               </a>
             ))}
           </div>
-          <CtaLink href="/simulador.html">
-            Try the simulator
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </CtaLink>
+          <div className="flex items-center gap-2">
+            <a
+              href="/panel.html"
+              className={cx(
+                "hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-[color,background-color] duration-100 ease-out hover:bg-accent-soft hover:text-accent sm:inline-flex",
+                focusRing,
+              )}
+            >
+              Dashboard
+            </a>
+            <CtaLink href="/simulador.html">
+              Try the simulator
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </CtaLink>
+          </div>
         </nav>
       </header>
 

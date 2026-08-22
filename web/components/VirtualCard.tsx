@@ -13,6 +13,8 @@ export function VirtualCard({
   status,
   ttlLabel,
   presetLabel,
+  holder = "AGENT · TASK-DEMO",
+  compact = false,
   className,
 }: {
   issued: boolean;
@@ -20,6 +22,10 @@ export function VirtualCard({
   status: CardVisualStatus;
   ttlLabel: string;
   presetLabel: string;
+  /** Agente y tarea reales. El default es solo para la demo de la landing. */
+  holder?: string;
+  /** Para listas: el PAN completo no entra en ~200px y se corta. */
+  compact?: boolean;
   className?: string | undefined;
 }) {
   if (!issued) {
@@ -54,11 +60,11 @@ export function VirtualCard({
           dead && "opacity-35",
         )}
       >
-        <div className="flex items-start justify-between">
-          <span className="font-mono text-xs font-semibold tracking-wide">
+        <div className="flex items-start justify-between gap-1.5">
+          <span className="truncate font-mono text-[11px] font-semibold tracking-wide">
             agent-card
           </span>
-          <span className="rounded-full border border-white/25 px-2 py-0.5 text-[10px] font-semibold tracking-widest text-white/80">
+          <span className="shrink-0 whitespace-nowrap rounded-full border border-white/25 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider text-white/80">
             {presetLabel}
           </span>
         </div>
@@ -77,16 +83,28 @@ export function VirtualCard({
           <Wifi aria-hidden="true" className="size-4 rotate-90 text-white/60" />
         </div>
 
-        <p className="font-mono text-base tracking-[0.18em] sm:text-lg" aria-label={`Card ending in ${last4}`}>
-          ••••&nbsp;&nbsp;••••&nbsp;&nbsp;••••&nbsp;&nbsp;{last4}
+        <p
+          className={cx(
+            "font-mono",
+            compact
+              ? "text-sm tracking-[0.12em]"
+              : "text-base tracking-[0.18em] sm:text-lg",
+          )}
+          aria-label={`Card ending in ${last4}`}
+        >
+          {compact ? (
+            <>••••&nbsp;&nbsp;{last4}</>
+          ) : (
+            <>••••&nbsp;&nbsp;••••&nbsp;&nbsp;••••&nbsp;&nbsp;{last4}</>
+          )}
         </p>
 
-        <div className="flex items-end justify-between text-[10px] tracking-wider text-white/70">
-          <div>
+        <div className="flex items-end justify-between gap-2 text-[10px] tracking-wider text-white/70">
+          <div className="min-w-0">
             <p className="mb-0.5 text-[9px] text-white/45">HOLDER</p>
-            <p className="font-mono font-medium text-white/90">AGENT · TASK-DEMO</p>
+            <p className="truncate font-mono font-medium text-white/90">{holder}</p>
           </div>
-          <div className="text-right">
+          <div className="shrink-0 text-right">
             <p className="mb-0.5 text-[9px] text-white/45">TTL</p>
             <p className="font-mono font-medium text-white/90">{ttlLabel}</p>
           </div>
@@ -97,7 +115,10 @@ export function VirtualCard({
         <div className="absolute inset-0 flex items-center justify-center">
           <span
             className={cx(
-              "animate-stamp-in rounded-md border-2 px-4 py-1.5 font-mono text-lg font-bold tracking-[0.3em]",
+              "animate-stamp-in whitespace-nowrap rounded-md border-2 font-mono font-bold",
+              compact
+                ? "px-2.5 py-1 text-xs tracking-[0.2em]"
+                : "px-4 py-1.5 text-lg tracking-[0.3em]",
               status === "kill"
                 ? "border-destructive text-destructive"
                 : "border-white/70 text-white/90",
