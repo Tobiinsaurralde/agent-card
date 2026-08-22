@@ -91,3 +91,23 @@ export interface Decision {
   /** Explicación legible, para el recibo y para el mensaje de error al agente. */
   reason: string;
 }
+
+export type CaptchaKind =
+  | "recaptchaV2"
+  | "recaptchaV3"
+  | "turnstile"
+  | "image_to_text"
+  | "unknown";
+
+export type CaptchaTaskStatus = "detected" | "solving" | "solved" | "failed";
+
+/** Evento de captcha para el recibo. Vive en el browser, no en el rail. */
+export interface CaptchaEvent {
+  at: Date;
+  merchant: string;
+  url: string;
+  kind: CaptchaKind;
+  status: CaptchaTaskStatus;
+  taskId: string;
+  durationMs?: number;
+}

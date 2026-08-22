@@ -77,6 +77,14 @@ antiejemplo, y es la base del posicionamiento: **tu plata nunca es mía**.
 ### 3.3 `DENY` gana, y la policy vive fuera del prompt
 La decisión se evalúa server-side. Un agente no puede negociar su propio límite.
 
+### 3.4 El captcha se resuelve en el browser, no en el MCP
+Si aparece un captcha en el checkout, Steel lo detecta y lo resuelve en la misma
+sesión del navegador (`solveCaptcha: true` + proxy residencial). Nuestro código
+solo espera el resultado y lo anota en el recibo. CapSolver/2Captcha no se
+integran directo: el token tiene que nacer en la misma sesión que navega.
+
+Ver `docs/captcha-y-3ds.md`.
+
 ---
 
 ## 4. El test: USD 20–50, un proveedor, dos escenarios
@@ -150,6 +158,22 @@ El interchange es del emisor. Nuestra opción realista: **fee por agente/mes**, 
 o un equipo chico — no el ticket de EE.UU. Con 20 devs pagando ya hay señal; no necesita volumen.
 
 Alternativa a evitar: spread sobre el funding. Acerca peligrosamente a tocar fondos de terceros.
+
+### Decisión abierta: ¿de quién es la cuenta con Interlace?
+
+Sin resolver al 21 ago 2026. Se decide después del test, con datos reales. Cambia el precio, el
+onboarding y a qué obligaciones legales quedamos expuestos, así que no se decide de taquito.
+
+**Opción A — reseller.** La cuenta es nuestra. El usuario paga acá y nunca ve a Interlace. Mejor
+producto y mejor marca, pero heredamos compliance y KYC, y quedamos más cerca de la línea de
+transmisión de dinero que §3.2 dice no cruzar.
+
+**Opción B — bring your own account.** El usuario trae su propia API key de Interlace y nosotros
+somos solo el software encima. Riesgo legal casi nulo y arranque más rápido, pero más fricción en el
+onboarding y el usuario ve de entrada que somos un wrapper — que es justo lo que §1 admite que somos.
+
+Lo que hay que mirar en el test para decidir: cuánta fricción real tiene el alta en Interlace desde
+Argentina. Si es fácil, B alcanza. Si es un dolor, A es el producto.
 
 ---
 
