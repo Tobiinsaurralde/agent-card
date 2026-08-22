@@ -219,10 +219,10 @@ export function Panel({
   className?: string;
 }) {
   return (
-    <section className={cx("rounded-xl border border-border bg-card p-4 md:p-5", className)}>
+    <section className={cx("rounded-2xl border border-border bg-card p-4 md:p-5", className)}>
       <header className="mb-4 flex items-start justify-between gap-3">
         <div className="space-y-0.5">
-          <h2 className="text-sm font-semibold tracking-tight text-card-foreground">{title}</h2>
+          <h2 className="font-display text-base font-bold tracking-tight text-card-foreground">{title}</h2>
           {description !== undefined && (
             <p className="text-xs text-muted-foreground">{description}</p>
           )}

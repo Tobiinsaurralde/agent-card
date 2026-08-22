@@ -68,9 +68,7 @@ const initialAttempt: Attempt = {
 };
 
 function useTheme() {
-  const [dark, setDark] = useState<boolean>(() =>
-    window.matchMedia("(prefers-color-scheme: dark)").matches,
-  );
+  const [dark, setDark] = useState(false);
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
@@ -324,13 +322,22 @@ export function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="landing relative min-h-screen overflow-x-hidden">
+      <div aria-hidden="true" className="landing-grain" />
+      <div aria-hidden="true" className="orb orb-blue animate-orb -right-20 -top-16 size-[22rem]" />
+      <div
+        aria-hidden="true"
+        className="orb orb-gold animate-orb-delayed -bottom-32 -left-16 size-[18rem]"
+      />
+
       {/* Los lectores de pantalla anuncian cada decisión sin mover el foco. */}
       <p role="status" aria-live="polite" className="sr-only">
         {liveMessage}
       </p>
 
-      <header className="border-b border-border">
+      <div aria-hidden="true" className="brand-bar h-1.5 w-full" />
+
+      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
             <a
@@ -341,9 +348,9 @@ export function App() {
               <img
                 src="/logo-light.png"
                 alt=""
-                className="size-8 shrink-0 rounded-lg border border-border"
+                className="size-9 shrink-0 rounded-lg border border-border shadow-sm"
               />
-              <span className="font-mono text-sm font-semibold tracking-tight">
+              <span className="font-display text-base font-bold tracking-tight">
                 agent-card
               </span>
             </a>
@@ -354,19 +361,10 @@ export function App() {
             </Chip>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            <a
-              href="https://github.com/Tobiinsaurralde/agent-card"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Repositorio en GitHub"
-              className="inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              <GithubMark className="size-4" />
-            </a>
             <button
               type="button"
               onClick={toggle}
-              aria-label={dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+              aria-label={dark ? "Cambiar a pergamino" : "Cambiar a navy"}
               className="inline-flex size-10 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {dark ? (
@@ -379,12 +377,20 @@ export function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
+      <main className="relative mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
         <div className="max-w-2xl">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-            La tarjeta que sabe decir que no.
+          <p className="font-mono text-xs font-semibold tracking-[0.22em] text-gold">
+            POLICY SIMULATOR
+          </p>
+          <h1 className="font-display mt-3 text-3xl font-extrabold leading-[1.05] text-foreground md:text-5xl">
+            La tarjeta que sabe decir que{" "}
+            <span className="text-gradient-brand">no.</span>
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">
+          <span
+            aria-hidden="true"
+            className="mt-4 block h-1 w-16 rounded-full bg-gradient-to-r from-accent to-gold"
+          />
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
             Defaults seguros para agentes de IA que compran solos. Configurá la
             política, intentá cobros y mirá exactamente qué se rechaza y por qué.
             El emisor es un mock local: esto mide la política, no el rail.
@@ -415,10 +421,11 @@ export function App() {
               status={cardStatus}
               ttlLabel={ttlLabel}
               presetLabel={issuedPreset === "safe" ? "SAFE" : "PERMISSIVE"}
+              className="card-glow"
             />
 
             {card !== null && (
-              <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+              <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-xs font-medium text-muted-foreground">
                     Comprometido
@@ -658,7 +665,7 @@ export function App() {
           {/* ─── Columna principal: actividad ─── */}
           <div className="space-y-5">
             {card !== null && (
-              <dl className="grid grid-cols-2 divide-border rounded-xl border border-border bg-card sm:grid-cols-4 sm:divide-x">
+              <dl className="grid grid-cols-2 divide-x-0 divide-y divide-border overflow-hidden rounded-2xl bg-primary text-primary-foreground sm:grid-cols-4 sm:divide-x sm:divide-y-0">
                 <StatCell label="Intentos" value={String(rows.length)} />
                 <StatCell label="Aprobados" value={String(approvedCount)} tone="success" />
                 <StatCell label="Rechazados" value={String(rejectedCount)} tone="destructive" />
@@ -680,7 +687,7 @@ export function App() {
                   return (
                     <article
                       key={def.id}
-                      className="flex flex-col gap-3 rounded-lg border border-border p-3.5"
+                      className="flex flex-col gap-3 rounded-xl border border-border bg-background/50 p-3.5"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="text-sm font-semibold text-foreground">
@@ -862,28 +869,12 @@ export function App() {
 
         <footer className="mt-12 border-t border-border pt-5">
           <p className="text-xs text-muted-foreground">
-            agent-card — capa de control con defaults seguros. Código en{" "}
-            <a
-              href="https://github.com/Tobiinsaurralde/agent-card"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-            >
-              GitHub
-            </a>
-            .
+            agent-card — capa de control con defaults seguros.
           </p>
         </footer>
       </main>
+      <div aria-hidden="true" className="brand-bar h-1.5 w-full" />
     </div>
-  );
-}
-
-function GithubMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
-      <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.15c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.77 1.05.77 2.12v3.15c0 .3.21.67.8.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
-    </svg>
   );
 }
 
@@ -898,16 +889,16 @@ function StatCell({
 }) {
   return (
     <div className="px-4 py-3">
-      <dt className="text-[11px] font-medium tracking-wide text-muted-foreground">
+      <dt className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
         {label}
       </dt>
       <dd
         className={cx(
-          "num mt-0.5 text-lg font-semibold",
+          "num mt-0.5 text-lg font-bold",
           tone === "success" && "text-success",
           tone === "destructive" && "text-destructive",
           tone === "warning" && "text-warning",
-          tone === undefined && "text-foreground",
+          tone === undefined && "text-primary-foreground",
         )}
       >
         {value}
