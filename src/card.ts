@@ -68,6 +68,15 @@ export class ControlledCard {
     );
   }
 
+  /**
+   * Qué diría la policy si este intento llegara ahora, sin tocar el rail ni
+   * dejar rastro. Es el preflight que le deja al agente preguntar antes de ir al
+   * checkout, y no puede mutar nada: si lo hiciera, consultar gastaría.
+   */
+  wouldAllow(attempt: AuthAttempt): Decision {
+    return evaluate(attempt, this.state, this.policy);
+  }
+
   async attempt(attempt: AuthAttempt): Promise<AttemptOutcome> {
     const decision = evaluate(attempt, this.state, this.policy);
 

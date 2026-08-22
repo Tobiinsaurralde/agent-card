@@ -26,6 +26,20 @@ export interface ProviderResult {
 }
 
 /**
+ * Permiso para que el cliente MCP le pida el PAN al proveedor **directo**.
+ *
+ * No contiene el PAN y nunca va a contenerlo: es un endpoint más un token de
+ * vida corta. El número viaja del emisor al agente sin escala en nuestro
+ * backend, que es lo que nos mantiene fuera de scope PCI. Ver docs/spec.md §3.1.
+ */
+export interface ProviderCredentialGrant {
+  provider: string;
+  endpoint: string;
+  token: string;
+  expiresAt: Date;
+}
+
+/**
  * Lo que necesitamos de cualquier emisor. La implementación real (Interlace,
  * Karma) va detrás de esta interfaz para que la policy no dependa del rail.
  *
@@ -37,6 +51,12 @@ export interface CardProvider {
   issue(opts: IssueOptions): Promise<ProviderCard>;
   authorize(cardId: string, attempt: AuthAttempt): Promise<ProviderResult>;
   close(cardId: string): Promise<void>;
+  /**
+   * Permiso de vida corta para que el cliente le pida el PAN al emisor.
+   * Opcional: un proveedor que no lo soporte deja al agente sin forma de pagar,
+   * pero no rompe la policy.
+   */
+  credentialGrant?(cardId: string): Promise<ProviderCredentialGrant>;
 }
 
 /**
@@ -86,5 +106,17 @@ export class MockProvider implements CardProvider {
   async close(cardId: string): Promise<void> {
     const card = this.cards.get(cardId);
     if (card !== undefined) card.closed = true;
+  }
+
+  async credentialGrant(cardId: string): Promise<ProviderCredentialGrant> {
+    const card = this.cards.get(cardId);
+    if (card === undefined) throw new Error(`Tarjeta desconocida: ${cardId}`);
+    if (card.closed) throw new Error("La tarjeta está cerrada: no se emiten credenciales.");
+    return {
+      provider: this.name,
+      endpoint: `https://mock.invalid/cards/${cardId}/pan`,
+      token: `tok_mock_${Math.random().toString(36).slice(2, 14)}`,
+      expiresAt: new Date(Date.now() + 60_000),
+    };
   }
 }
