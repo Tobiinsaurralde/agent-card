@@ -1,4 +1,11 @@
 /**
+ * 127.0.0.1 y no "localhost": en Mac, localhost resuelve primero a ::1 y Chrome
+ * escucha el puerto de depuración en IPv4, así que "localhost" da ECONNREFUSED
+ * con el navegador perfectamente abierto.
+ */
+const DEFAULT_CDP = "http://127.0.0.1:9222";
+
+/**
  * La medición: ¿puede una tarjeta completar una compra online de verdad?
  *
  * Un intento, un comercio, un veredicto. No reintenta nunca, ni siquiera cuando
@@ -18,9 +25,11 @@ import { SteelBrowser } from "../browser.js";
 import type { CheckoutSession } from "../browser.js";
 
 interface Args {
-  url: string;
+  /** `null` significa "usá la pestaña que ya está abierta". */
+  url: string | null;
   connectUrl: string | null;
   useSteel: boolean;
+  dryRun: boolean;
   screenshot: string;
 }
 
@@ -38,12 +47,19 @@ Usar un --user-data-dir aparte es a propósito: no toca tu perfil ni tus sesione
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
+  if (args.dryRun) return dryRun(args);
+
   const card = CardCredentials.fromEnv();
 
   let session: CheckoutSession | null = null;
   let connectUrl = args.connectUrl;
 
   if (args.useSteel) {
+    if (args.url === null) {
+      console.error("--steel abre un navegador nuevo, así que no hay pestaña previa: usá --url.");
+      process.exitCode = 1;
+      return;
+    }
     const steel = SteelBrowser.fromEnv();
     session = await steel.open({ merchant: new URL(args.url).hostname });
     connectUrl = session.connectUrl;
@@ -51,10 +67,10 @@ async function main(): Promise<void> {
     if (session.viewerUrl !== null) console.log(`Mirala en vivo: ${session.viewerUrl}`);
   }
 
-  connectUrl ??= "http://localhost:9222";
+  connectUrl ??= DEFAULT_CDP;
 
   console.log("");
-  console.log(`Comercio:  ${args.url}`);
+  console.log(`Página:    ${args.url ?? "la que ya está abierta"}`);
   console.log(`Tarjeta:   ${card.brand} ••${card.last4}`);
   console.log(`Navegador: ${connectUrl}`);
   console.log("");
@@ -66,7 +82,7 @@ async function main(): Promise<void> {
 
   try {
     const report = await new CheckoutDriver().attempt({
-      url: args.url,
+      ...(args.url !== null ? { url: args.url } : {}),
       card,
       connectUrl,
       screenshotPath: args.screenshot,
@@ -111,6 +127,43 @@ async function main(): Promise<void> {
   }
 }
 
+/**
+ * Reconocimiento: ¿este comercio se entiende? Sin tarjeta, sin llenar y sin
+ * enviar. Es lo que hay que correr antes de arriesgar un cobro.
+ */
+async function dryRun(args: Args): Promise<void> {
+  const connectUrl = args.connectUrl ?? DEFAULT_CDP;
+  console.log("");
+  console.log(`Reconocimiento de ${args.url ?? "la pestaña abierta"}`);
+  console.log("Sin tarjeta, sin llenar y sin enviar nada.");
+  console.log("");
+
+  const report = await new CheckoutDriver().inspect({
+    ...(args.url !== null ? { url: args.url } : {}),
+    connectUrl,
+  });
+
+  console.log(`Terminó en: ${report.url}`);
+  console.log("");
+  for (const field of ["number", "expiry", "expiryMonth", "expiryYear", "cvc", "name", "submit"] as const) {
+    const hit = report.found[field];
+    console.log(`  ${hit === undefined ? "✗" : "✓"} ${field.padEnd(12)} ${hit ?? "(no encontrado)"}`);
+  }
+  console.log("");
+
+  if (report.usable) {
+    console.log("SE ENTIENDE. Este comercio se puede intentar con una tarjeta.");
+  } else {
+    console.log(`NO SE ENTIENDE. Faltan: ${report.missing.join(", ")}.`);
+    console.log("");
+    console.log("Campos que había en la página:");
+    for (const input of report.inputs) console.log(`  · ${input}`);
+    console.log("");
+    console.log("Con eso se agregan los selectores que falten en FIELD_SELECTORS (src/driver.ts).");
+    process.exitCode = 2;
+  }
+}
+
 /** Qué hacer con el resultado, que es la parte que importa mañana. */
 function verdictAdvice(outcome: {
   kind: string;
@@ -149,25 +202,39 @@ function parseArgs(argv: string[]): Args {
     return at === -1 ? undefined : argv[at + 1];
   };
 
-  const url = get("--url");
-  if (url === undefined) {
-    console.error("Falta --url con el checkout a probar.");
+  if (argv.length === 0 || argv.includes("--help")) {
+    console.error("Uso:");
     console.error("");
-    console.error("  npm run test:checkout -- --url https://comercio/checkout");
+    console.error("  npm run test:checkout -- --here --dry-run     ← lo normal");
+    console.error("  npm run test:checkout -- --here               ← el intento real");
     console.error("");
     console.error("Opciones:");
-    console.error("  --connect <ws|http>  CDP a usar. Default: http://localhost:9222");
+    console.error("  --here               Usa la pestaña que ya tenés abierta, sin navegar.");
+    console.error("                       Es lo que querés casi siempre: los checkouts son de");
+    console.error("                       varios pasos y navegar te saca del carrito que armaste.");
+    console.error("  --url <url>          Navega a esa URL primero. Solo sirve si el formulario");
+    console.error("                       de tarjeta está ahí de entrada.");
+    console.error("  --dry-run            Solo mira si encuentra el formulario. Sin tarjeta y sin enviar");
+    console.error(`  --connect <ws|http>  CDP a usar. Default: ${DEFAULT_CDP}`);
     console.error("  --steel              Abre una sesión de Steel en vez del Chrome local");
     console.error("  --out <archivo>      Dónde dejar la captura del resultado");
     console.error(CHROME_HINT);
     process.exit(1);
   }
 
+  const url = get("--url");
+  if (url === undefined && !argv.includes("--here")) {
+    console.error("Decidí sobre qué página trabajar: --here (la pestaña abierta) o --url <url>.");
+    console.error("Si no sabés, es --here.");
+    process.exit(1);
+  }
+
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   return {
-    url,
+    url: url ?? null,
     connectUrl: get("--connect") ?? null,
     useSteel: argv.includes("--steel"),
+    dryRun: argv.includes("--dry-run"),
     screenshot: resolve(get("--out") ?? `harness/results/checkout-${stamp}.png`),
   };
 }

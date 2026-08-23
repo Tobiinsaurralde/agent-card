@@ -59,19 +59,47 @@ Abrí Chrome con el puerto de depuración, en un perfil aparte para no tocar tus
   --remote-debugging-port=9222 --user-data-dir=/tmp/agent-card-test
 ```
 
-Armá el carrito a mano y dejá la pestaña en el checkout. Después:
+**Navegá a mano hasta la pantalla donde se pide la tarjeta.** Esto es importante y no es un
+atajo: los checkouts reales son de varios pasos —carrito, monto, datos, y recién ahí la
+tarjeta— y muchos son SPAs cuya URL no se puede volver a entrar. Por eso el modo normal es
+`--here`, que trabaja sobre la pestaña que ya tenés abierta sin navegar a ningún lado.
+
+Primero mirá si el formulario se entiende, que no cuesta nada ni toca la tarjeta:
 
 ```bash
-npm run test:checkout -- --url https://comercio.com/checkout
+npm run test:checkout -- --here --dry-run
+```
+
+Si dice `SE ENTIENDE`, ahí sí va el intento real:
+
+```bash
+npm run test:checkout -- --here
 ```
 
 Empezá por un comercio permisivo y de monto chico: un dominio `.xyz` en Porkbun o Namecheap
 sale ~USD 1-2 y es un checkout online real. Si pasa, repetí en uno estricto —una suscripción
 SaaS— porque los comercios no son todos igual de exigentes y uno permisivo no generaliza.
 
+`--url <url>` existe para el caso raro en que el formulario de tarjeta está en la URL de
+entrada. Si dudás, es `--here`.
+
 Con `--steel` usa una sesión de Steel en vez de tu Chrome, y ahí el captcha se resuelve solo.
 Para la primera corrida no hace falta: si aparece un captcha, resolvelo a mano y listo. Conviene
 así, porque separa la pregunta de la tarjeta de la pregunta del captcha.
+
+### ¿Los selectores sirven?
+
+Los campos de tarjeta suelen vivir en iframes del procesador, no en la página. Para Stripe
+—que es lo que hay abajo de casi todo checkout de SaaS y créditos de API— está verificado
+contra sus iframes reales:
+
+```bash
+npm run recon:stripe
+```
+
+Corrélo cuando toques `FIELD_SELECTORS` en `src/driver.ts`. El test del driver en `npm test`
+usa un checkout falso que escribimos nosotros, así que por sí solo es circular: prueba que
+nuestros selectores encuentran nuestro HTML. Este reconocimiento usa HTML de Stripe.
 
 ## Leer el resultado
 

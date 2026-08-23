@@ -1,12 +1,7 @@
 import assert from "node:assert/strict";
-import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { setTimeout as sleep } from "node:timers/promises";
 import { test } from "node:test";
+import { findChrome, launchChrome } from "../harness/chrome.js";
 import { CardCredentials } from "../src/credentials.js";
 import { CheckoutDriver, FormNotFoundError } from "../src/driver.js";
 
@@ -18,8 +13,6 @@ import { CheckoutDriver, FormNotFoundError } from "../src/driver.js";
  * veredicto— sin gastar un peso ni tocar un comercio real. Si esto no pasa, no
  * tiene sentido probar con una tarjeta de verdad.
  */
-
-const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const CARD = CardCredentials.forTesting({
   pan: "4111111111111111",
@@ -40,7 +33,7 @@ const DECLINED = CardCredentials.forTesting({
 });
 
 test("el driver llena un checkout con iframe, envía y lee la aprobación", async (t) => {
-  if (!existsSync(CHROME)) return t.skip("no hay Chrome en esta máquina");
+  if (findChrome() === null) return t.skip("no hay Chrome en esta máquina");
   const { origin, stop } = await fakeCheckout();
   const chrome = await launchChrome();
 
@@ -64,7 +57,7 @@ test("el driver llena un checkout con iframe, envía y lee la aprobación", asyn
 });
 
 test("el driver lee el rechazo del comercio y su motivo", async (t) => {
-  if (!existsSync(CHROME)) return t.skip("no hay Chrome en esta máquina");
+  if (findChrome() === null) return t.skip("no hay Chrome en esta máquina");
   const { origin, stop } = await fakeCheckout();
   const chrome = await launchChrome();
 
@@ -85,7 +78,7 @@ test("el driver lee el rechazo del comercio y su motivo", async (t) => {
 });
 
 test("si no hay formulario, falla con lo que vio y no envía nada", async (t) => {
-  if (!existsSync(CHROME)) return t.skip("no hay Chrome en esta máquina");
+  if (findChrome() === null) return t.skip("no hay Chrome en esta máquina");
   const { origin, stop } = await fakeCheckout();
   const chrome = await launchChrome();
 
@@ -170,49 +163,4 @@ function html(res: import("node:http").ServerResponse, body: string): void {
   res
     .writeHead(200, { "content-type": "text/html; charset=utf-8" })
     .end(`<!doctype html><meta charset="utf-8"><title>Checkout</title>${body}`);
-}
-
-/**
- * Chrome headless con el puerto de depuración, igual que lo va a abrir Tobi.
- * El puerto lo elige Chrome (`0`) y lo deja escrito en DevToolsActivePort: pedirle
- * uno fijo haría que el test choque con cualquier cosa que ya lo esté usando.
- */
-async function launchChrome(): Promise<{ cdpUrl: string; kill: () => Promise<void> }> {
-  const profile = await mkdtemp(join(tmpdir(), "agent-card-chrome-"));
-  const child: ChildProcess = spawn(
-    CHROME,
-    [
-      "--headless=new",
-      "--remote-debugging-port=0",
-      `--user-data-dir=${profile}`,
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-gpu",
-    ],
-    { stdio: "ignore" },
-  );
-
-  const portFile = join(profile, "DevToolsActivePort");
-  const deadline = Date.now() + 20_000;
-  while (Date.now() < deadline) {
-    try {
-      const [port] = (await readFile(portFile, "utf8")).split("\n");
-      if (port !== undefined && port.trim() !== "") {
-        return {
-          cdpUrl: `http://127.0.0.1:${port.trim()}`,
-          kill: async () => {
-            child.kill("SIGKILL");
-            await rm(profile, { recursive: true, force: true });
-          },
-        };
-      }
-    } catch {
-      // Todavía no lo escribió.
-    }
-    await sleep(200);
-  }
-
-  child.kill("SIGKILL");
-  await rm(profile, { recursive: true, force: true });
-  throw new Error("Chrome no publicó el puerto de depuración en 20s.");
 }

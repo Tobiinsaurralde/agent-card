@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Checkout</title>
+<!--
+  Stripe Elements de verdad, servido local, para verificar que el driver encuentra
+  los campos dentro de los iframes reales de Stripe.
+
+  Los checkouts que nos importan (SaaS, créditos de API, dominios) usan esto o algo
+  igual, y los campos viven en iframes de js.stripe.com. Un fixture con inputs
+  propios no prueba nada: probaría nuestros selectores contra nuestro HTML.
+
+  La clave es la publicable de prueba que Stripe publica en su documentación. Es
+  pública, es de test, y solo sirve para renderizar. No cobra nada.
+
+  Necesita red (carga js.stripe.com), así que no va en la suite automática.
+  Se usa a mano:  npm run recon:stripe
+-->
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 420px; margin: 40px auto; }
+  .field { border: 1px solid #ccc; border-radius: 6px; padding: 10px; margin: 10px 0; }
+  button { padding: 10px 18px; font-size: 15px; }
+</style>
+
+<h1>Pagar</h1>
+<div class="field" id="card-number"></div>
+<div class="field" id="card-expiry"></div>
+<div class="field" id="card-cvc"></div>
+<input class="field" autocomplete="cc-name" placeholder="Name on card" style="width:100%" />
+<button type="submit" id="pay">Pay</button>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe("pk_test_TYooMQauvdEDq54NiTphI7jx");
+  const elements = stripe.elements();
+  elements.create("cardNumber").mount("#card-number");
+  elements.create("cardExpiry").mount("#card-expiry");
+  elements.create("cardCvc").mount("#card-cvc");
+</script>

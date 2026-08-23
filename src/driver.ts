@@ -21,13 +21,23 @@ import type { CardCredentials } from "./credentials.js";
  */
 
 export interface AttemptRequest {
-  /** URL del checkout, ya con el carrito armado. */
-  url: string;
+  /**
+   * URL del checkout. Si se omite, trabaja sobre la página que el navegador ya
+   * tiene abierta.
+   *
+   * Omitirla es lo normal, no la excepción: los checkouts reales son de varios
+   * pasos —carrito, monto, datos, y recién ahí la tarjeta— y muchos son SPAs
+   * cuya URL no se puede volver a entrar. Navegar de nuevo te saca del estado que
+   * armaste a mano.
+   */
+  url?: string;
   card: CardCredentials;
   /** WebSocket CDP de la sesión del browser (Steel lo da en `connectUrl`). */
   connectUrl: string;
   /** Cuánto esperar el veredicto después de enviar. */
   verdictTimeoutMs?: number;
+  /** Cuánto esperar a que aparezca el formulario. Los iframes de pago tardan. */
+  formTimeoutMs?: number;
   /** Dónde dejar la captura del resultado. Sin esto, no saca ninguna. */
   screenshotPath?: string;
 }
@@ -40,6 +50,30 @@ export interface AttemptReport {
   filled: string[];
   screenshotPath: string | null;
 }
+
+/**
+ * Lo mínimo para redactar secretos de un texto antes de mostrarlo.
+ * `CardCredentials` lo cumple; en reconocimiento no hay tarjeta y no hay nada
+ * que ocultar.
+ */
+export interface Redactor {
+  redact(text: string): string;
+}
+
+const NO_SECRETS: Redactor = { redact: (text) => text };
+
+export interface InspectReport {
+  url: string;
+  /** Campo → el selector que lo encontró. Ausente significa que no se encontró. */
+  found: Partial<Record<FieldName, string>>;
+  /** Todo lo que había, para escribir los selectores que falten. */
+  inputs: string[];
+  /** ¿Alcanza para intentar un pago? */
+  usable: boolean;
+  missing: FieldName[];
+}
+
+export type FieldName = "number" | "expiry" | "expiryMonth" | "expiryYear" | "cvc" | "name" | "submit";
 
 /** Los selectores que un checkout puede usar para cada campo, del más confiable al menos. */
 const FIELD_SELECTORS = {
@@ -101,6 +135,56 @@ const SUBMIT_SELECTORS = [
 
 export class CheckoutDriver {
   /**
+   * Reconocimiento: mira si este comercio se entiende, sin llenar ni enviar nada
+   * y sin necesitar una tarjeta.
+   *
+   * Existe porque los selectores de `FIELD_SELECTORS` valen lo que valen contra
+   * el HTML real, y descubrir que no sirven cuando ya hay una tarjeta cargada y
+   * un cobro en juego es la peor forma de descubrirlo.
+   */
+  async inspect(opts: {
+    url?: string;
+    connectUrl: string;
+    formTimeoutMs?: number;
+  }): Promise<InspectReport> {
+    const browser = await chromium.connectOverCDP(opts.connectUrl);
+    try {
+      const page = await currentPage(browser);
+      if (opts.url !== undefined) {
+        await page.goto(opts.url, { waitUntil: "domcontentloaded" });
+      }
+      await waitForCardForm(page, opts.formTimeoutMs ?? 10_000);
+
+      const found: Partial<Record<FieldName, string>> = {};
+      for (const [name, selectors] of Object.entries(FIELD_SELECTORS)) {
+        const hit = await findSelector(page, selectors);
+        if (hit !== null) found[name as FieldName] = hit;
+      }
+      const submit = await findSelector(page, SUBMIT_SELECTORS);
+      if (submit !== null) found.submit = submit;
+
+      const hasExpiry =
+        found.expiry !== undefined ||
+        (found.expiryMonth !== undefined && found.expiryYear !== undefined);
+      const missing: FieldName[] = [];
+      if (found.number === undefined) missing.push("number");
+      if (!hasExpiry) missing.push("expiry");
+      if (found.cvc === undefined) missing.push("cvc");
+      if (found.submit === undefined) missing.push("submit");
+
+      return {
+        url: page.url(),
+        found,
+        inputs: await describeInputs(page, NO_SECRETS),
+        usable: missing.length === 0,
+        missing,
+      };
+    } finally {
+      await browser.close();
+    }
+  }
+
+  /**
    * Corre **un** intento y devuelve el veredicto. Que sea un método suelto y no
    * un objeto con estado es a propósito: no hay dónde guardar un contador de
    * reintentos porque no hay reintentos.
@@ -109,7 +193,10 @@ export class CheckoutDriver {
     const browser = await chromium.connectOverCDP(req.connectUrl);
     try {
       const page = await currentPage(browser);
-      await page.goto(req.url, { waitUntil: "domcontentloaded" });
+      if (req.url !== undefined) {
+        await page.goto(req.url, { waitUntil: "domcontentloaded" });
+      }
+      await waitForCardForm(page, req.formTimeoutMs ?? 10_000);
 
       const filled = await this.fillCard(page, req.card);
       await this.submit(page, req.card);
@@ -235,6 +322,22 @@ export class FormNotFoundError extends Error {
   }
 }
 
+/**
+ * Espera a que aparezca el campo del número, en vez de dormir un rato fijo.
+ *
+ * Los iframes de Stripe y compañía se montan bastante después del `load`, y la
+ * demora depende de la red del momento. Si al final no aparece, sigue igual: el
+ * diagnóstico de "no encontré el formulario" lo da quien busca, con la lista de
+ * campos que sí había, que es más útil que un timeout pelado.
+ */
+async function waitForCardForm(page: Page, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if ((await findField(page, FIELD_SELECTORS.number)) !== null) return;
+    await page.waitForTimeout(500);
+  }
+}
+
 /** Busca en el frame principal y en los iframes, que es donde vive Stripe Elements. */
 async function findField(page: Page, selectors: readonly string[]): Promise<Locator | null> {
   for (const selector of selectors) {
@@ -248,6 +351,32 @@ async function findField(page: Page, selectors: readonly string[]): Promise<Loca
     }
   }
   return null;
+}
+
+/** Igual que `findField` pero devuelve qué selector funcionó, para el reconocimiento. */
+async function findSelector(page: Page, selectors: readonly string[]): Promise<string | null> {
+  for (const selector of selectors) {
+    for (const frame of page.frames()) {
+      const locator = frame.locator(selector).first();
+      try {
+        if ((await locator.count()) > 0 && (await locator.isVisible())) {
+          const where = frame === page.mainFrame() ? "página" : `iframe ${hostOf(frame.url())}`;
+          return `${selector}  (${where})`;
+        }
+      } catch {
+        // idem findField
+      }
+    }
+  }
+  return null;
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
 }
 
 async function fillSafely(
@@ -295,14 +424,15 @@ async function evidenceOf(page: Page): Promise<PageEvidence> {
 }
 
 /** Qué inputs había, para poder arreglar los selectores sin adivinar. */
-async function describeInputs(page: Page, card: CardCredentials): Promise<string[]> {
+async function describeInputs(page: Page, redactor: Redactor): Promise<string[]> {
   const out: string[] = [];
   for (const frame of page.frames()) {
     const described = await describeFrame(frame).catch(() => []);
+    const where = frame === page.mainFrame() ? "página" : `iframe ${hostOf(frame.url())}`;
     for (const item of described) {
       // El `value` nunca se lee acá, pero el `name` de un campo puede venir con
       // datos y redactar es más barato que confiar.
-      out.push(card.redact(item));
+      out.push(redactor.redact(`[${where}] ${item}`));
     }
   }
   return out.length === 0 ? ["(ninguno)"] : out;

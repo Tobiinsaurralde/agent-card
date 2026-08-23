@@ -78,8 +78,13 @@ Es el test del que depende todo lo demás. Se corre dos veces —con una tarjeta
 con la del emisor candidato— y la comparación es el resultado.
 
 ```bash
-npm run test:checkout -- --url https://comercio.com/checkout
+npm run test:checkout -- --here --dry-run   # ¿se entiende el formulario? sin tarjeta
+npm run test:checkout -- --here             # el intento real
 ```
+
+Trabaja sobre la pestaña que ya tenés abierta, porque los checkouts reales son de varios pasos
+y navegar de nuevo te saca del carrito que armaste. Los selectores están verificados contra los
+iframes reales de Stripe (`npm run recon:stripe`).
 
 Un intento por corrida, nunca reintenta, y cuando el resultado es ambiguo dice `DESCONOCIDO`
 en vez de `RECHAZADO`: un falso rechazo invita a reintentar, y reintentar un cobro que sí entró
