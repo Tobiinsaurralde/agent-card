@@ -40,8 +40,9 @@ Ver [`docs/spec.md`](docs/spec.md) para el mapa completo de la categoría y qué
 | Browser de checkout + captcha (Steel) | listo — prende `solveCaptcha` en la sesión |
 | Panel del usuario | listo — sobre el motor real, emisor mock |
 | Servidor MCP | listo — 11 tools, contra emisor mock |
-| Adaptador Interlace real | pendiente — necesita API key |
-| Medición con cargos reales | pendiente — es el próximo paso |
+| Automatización del checkout | listo — probada contra Chrome real, sin emisor |
+| Medición con una tarjeta real | **pendiente, y es lo único que importa ahora** |
+| Adaptador de emisor real | pendiente — depende del resultado de la medición |
 
 Lo que sigue faltando es lo único que puede matar el producto: medir contra un emisor real si los
 bypasses existen de verdad. El servidor MCP corre hoy contra `MockProvider`, así que prueba la
@@ -68,6 +69,22 @@ El harness corre contra `MockProvider`, que modela un emisor que aprueba todo mi
 
 El captcha del checkout lo resuelve Steel en la misma sesión del navegador. Copiá `.env.example` a
 `.env` y poné `STEEL_API_KEY`. Sin la key, `MockBrowser` simula la resolución para tests.
+
+---
+
+## Medir si la tarjeta compra online
+
+Es el test del que depende todo lo demás. Se corre dos veces —con una tarjeta virtual tuya y
+con la del emisor candidato— y la comparación es el resultado.
+
+```bash
+npm run test:checkout -- --url https://comercio.com/checkout
+```
+
+Un intento por corrida, nunca reintenta, y cuando el resultado es ambiguo dice `DESCONOCIDO`
+en vez de `RECHAZADO`: un falso rechazo invita a reintentar, y reintentar un cobro que sí entró
+es cobrarle dos veces al usuario. El protocolo completo está en
+[`docs/medir-compra-online.md`](docs/medir-compra-online.md).
 
 ---
 
@@ -163,6 +180,9 @@ src/provider.ts  interfaz CardProvider + MockProvider en memoria
 src/card.ts      ControlledCard: policy delante del rail, más recibos
 src/browser.ts   checkout en Steel: captcha prendido, eventos en el recibo
 src/service.ts   el servicio: wallet, tarjetas, recibos, kill switch
+src/checkout.ts  leer de la página si el cobro pasó, y si no, por qué
+src/driver.ts    manejar el checkout: llenar la tarjeta, enviar, leer el veredicto
+src/credentials.ts  la tarjeta real del test, que se redacta sola al loguearse
 src/mcp/server.ts  las tools que ve el agente
 src/mcp/bin.ts     entrypoint stdio
 harness/         escenarios y runner
