@@ -35,14 +35,27 @@ import {
   EmailCodeError,
   preparePorkbunCheckout,
 } from "../merchants/porkbun.js";
+import {
+  prepareSpaceshipCheckout,
+  SpaceshipEmailCodeError,
+  SpaceshipError,
+} from "../merchants/spaceship.js";
 import { SteelBrowser } from "../browser.js";
 import type { CheckoutSession } from "../browser.js";
+
+/**
+ * Spaceship es el default porque su alta no tiene captcha y el `.xyz` sale más
+ * barato, lo que deja margen sobre el saldo de la tarjeta. Porkbun queda para
+ * comparar: su alta está detrás de un Turnstile que un agente solo no pasa.
+ */
+export type Merchant = "spaceship" | "porkbun";
 
 interface Args {
   /** `null` significa "usá la pestaña que ya está abierta". */
   url: string | null;
-  /** Dominio a comprar de punta a punta (Porkbun). El agente no espera el carrito. */
+  /** Dominio a comprar de punta a punta. El agente no espera el carrito armado. */
   buy: string | null;
+  merchant: Merchant;
   connectUrl: string | null;
   useSteel: boolean;
   dryRun: boolean;
@@ -74,8 +87,10 @@ async function main(): Promise<void> {
     if (args.buy !== null) {
       const buyer = buyerFromEnv();
       const connectUrl = args.connectUrl ?? DEFAULT_CDP;
-      console.log(`Comprando ${args.buy} de punta a punta. El agente arma el carrito y la cuenta.`);
-      await preparePorkbunCheckout({ domain: args.buy, buyer, connectUrl, emailCode: envEmailCode });
+      console.log(`Comprando ${args.buy} en ${args.merchant}. El agente arma el carrito y la cuenta.`);
+      const prep = { domain: args.buy, buyer, connectUrl, emailCode: envEmailCode };
+      if (args.merchant === "spaceship") await prepareSpaceshipCheckout(prep);
+      else await preparePorkbunCheckout(prep);
       args.url = null;
     }
 
@@ -92,6 +107,25 @@ async function main(): Promise<void> {
       for (const key of error.keys) console.error(`  ${key}`);
       console.error("Van en .env. No se piden en el checkout.");
       process.exitCode = 2;
+      return;
+    }
+    if (error instanceof SpaceshipEmailCodeError) {
+      console.error("");
+      console.error("MURO: Spaceship pide un código de verificación por mail.");
+      console.error("");
+      console.error("Es un paso del alta, no del pago. Se pasa una vez:");
+      console.error("  AGENT_CARD_TEST_EMAIL_CODE=123456 npm run test:checkout -- --buy <dominio>");
+      console.error("");
+      console.error("La tarjeta todavía no se tocó.");
+      process.exitCode = 4;
+      return;
+    }
+    if (error instanceof SpaceshipError) {
+      console.error("");
+      console.error(error.message);
+      console.error("");
+      console.error("Es el alta o el carrito, no el pago: la tarjeta todavía no se tocó.");
+      process.exitCode = 5;
       return;
     }
     if (error instanceof AccountRejectedError) {
@@ -291,7 +325,9 @@ function parseArgs(argv: string[]): Args {
     console.error("  npm run test:checkout -- --here --dry-run");
     console.error("");
     console.error("Opciones:");
-    console.error("  --buy <dominio>      Porkbun de punta a punta: busca, cuenta, paga.");
+    console.error("  --buy <dominio>      De punta a punta: busca, arma el carrito, cuenta, paga.");
+    console.error("  --at <comercio>      spaceship (default) o porkbun. Spaceship no tiene");
+    console.error("                       captcha en el alta; el de Porkbun no lo pasa un agente.");
     console.error("  --here               Usa la pestaña que ya tenés abierta, sin navegar.");
     console.error("                       Es lo que querés casi siempre: los checkouts son de");
     console.error("                       varios pasos y navegar te saca del carrito que armaste.");
@@ -312,10 +348,17 @@ function parseArgs(argv: string[]): Args {
     process.exit(1);
   }
 
+  const at = get("--at") ?? "spaceship";
+  if (at !== "spaceship" && at !== "porkbun") {
+    console.error(`No conozco el comercio "${at}". Son: spaceship, porkbun.`);
+    process.exit(1);
+  }
+
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   return {
     url: url ?? null,
     buy,
+    merchant: at,
     connectUrl: get("--connect") ?? null,
     useSteel: argv.includes("--steel"),
     dryRun: argv.includes("--dry-run"),
