@@ -5,6 +5,12 @@
  */
 const DEFAULT_CDP = "http://127.0.0.1:9222";
 
+/** El código de verificación del alta, si nos lo dejaron a mano. */
+async function envEmailCode(): Promise<string | null> {
+  const code = process.env["AGENT_CARD_TEST_EMAIL_CODE"]?.trim();
+  return code === undefined || code === "" ? null : code;
+}
+
 /**
  * La medición: ¿puede una tarjeta completar una compra online de verdad?
  *
@@ -18,15 +24,25 @@ const DEFAULT_CDP = "http://127.0.0.1:9222";
 
 import { mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { DECLINE_MEANING, explain, isStructural } from "../checkout.js";
+import { launchChrome } from "../../harness/chrome.js";
+import { buyerFromEnv, MissingBuyerFieldError } from "../buyer.js";
+import { DECLINE_MEANING, explain } from "../checkout.js";
 import { CardCredentials } from "../credentials.js";
 import { CheckoutDriver, FormNotFoundError } from "../driver.js";
+import {
+  AccountCaptchaError,
+  AccountRejectedError,
+  EmailCodeError,
+  preparePorkbunCheckout,
+} from "../merchants/porkbun.js";
 import { SteelBrowser } from "../browser.js";
 import type { CheckoutSession } from "../browser.js";
 
 interface Args {
   /** `null` significa "usá la pestaña que ya está abierta". */
   url: string | null;
+  /** Dominio a comprar de punta a punta (Porkbun). El agente no espera el carrito. */
+  buy: string | null;
   connectUrl: string | null;
   useSteel: boolean;
   dryRun: boolean;
@@ -47,8 +63,74 @@ Usar un --user-data-dir aparte es a propósito: no toca tu perfil ni tus sesione
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  if (args.dryRun) return dryRun(args);
+  let launched: Awaited<ReturnType<typeof launchChrome>> | null = null;
 
+  if (args.buy !== null && args.connectUrl === null && !args.useSteel) {
+    launched = await launchChrome({ headed: true });
+    args.connectUrl = launched.cdpUrl;
+  }
+
+  try {
+    if (args.buy !== null) {
+      const buyer = buyerFromEnv();
+      const connectUrl = args.connectUrl ?? DEFAULT_CDP;
+      console.log(`Comprando ${args.buy} de punta a punta. El agente arma el carrito y la cuenta.`);
+      await preparePorkbunCheckout({ domain: args.buy, buyer, connectUrl, emailCode: envEmailCode });
+      args.url = null;
+    }
+
+    if (args.dryRun) {
+      await dryRun(args);
+      return;
+    }
+
+    await pay(args);
+  } catch (error) {
+    if (error instanceof MissingBuyerFieldError) {
+      console.error("");
+      console.error("El agente no tiene el perfil del comprador:");
+      for (const key of error.keys) console.error(`  ${key}`);
+      console.error("Van en .env. No se piden en el checkout.");
+      process.exitCode = 2;
+      return;
+    }
+    if (error instanceof AccountRejectedError) {
+      console.error("");
+      console.error(error.message);
+      console.error("");
+      console.error("Es el alta de cuenta, no el pago: la tarjeta todavía no se tocó.");
+      process.exitCode = 5;
+      return;
+    }
+    if (error instanceof EmailCodeError) {
+      console.error("");
+      console.error("MURO: Porkbun pide un código de verificación por mail.");
+      console.error("");
+      console.error("Es un paso del alta de cuenta, no del pago. Se hace una vez:");
+      console.error("  AGENT_CARD_TEST_EMAIL_CODE=123456 npm run test:checkout -- --buy <dominio>");
+      console.error("");
+      console.error("Esto no dice nada sobre la tarjeta todavía.");
+      process.exitCode = 4;
+      return;
+    }
+    if (error instanceof AccountCaptchaError) {
+      console.error("");
+      console.error("MURO: captcha en el alta de cuenta.");
+      console.error("");
+      console.error(error.message);
+      console.error("");
+      console.error("Esto NO dice nada sobre la tarjeta: el captcha está antes del pago.");
+      console.error("Con la cuenta ya creada, el agente entra y paga sin intervención.");
+      process.exitCode = 3;
+      return;
+    }
+    throw error;
+  } finally {
+    if (launched !== null) await launched.kill();
+  }
+}
+
+async function pay(args: Args): Promise<void> {
   const card = CardCredentials.fromEnv();
 
   let session: CheckoutSession | null = null;
@@ -205,10 +287,11 @@ function parseArgs(argv: string[]): Args {
   if (argv.length === 0 || argv.includes("--help")) {
     console.error("Uso:");
     console.error("");
-    console.error("  npm run test:checkout -- --here --dry-run     ← lo normal");
-    console.error("  npm run test:checkout -- --here               ← el intento real");
+    console.error("  npm run test:checkout -- --buy konextech.xyz  ← el agente hace todo");
+    console.error("  npm run test:checkout -- --here --dry-run");
     console.error("");
     console.error("Opciones:");
+    console.error("  --buy <dominio>      Porkbun de punta a punta: busca, cuenta, paga.");
     console.error("  --here               Usa la pestaña que ya tenés abierta, sin navegar.");
     console.error("                       Es lo que querés casi siempre: los checkouts son de");
     console.error("                       varios pasos y navegar te saca del carrito que armaste.");
@@ -223,15 +306,16 @@ function parseArgs(argv: string[]): Args {
   }
 
   const url = get("--url");
-  if (url === undefined && !argv.includes("--here")) {
-    console.error("Decidí sobre qué página trabajar: --here (la pestaña abierta) o --url <url>.");
-    console.error("Si no sabés, es --here.");
+  const buy = get("--buy") ?? null;
+  if (url === undefined && buy === null && !argv.includes("--here")) {
+    console.error("Decidí: --buy <dominio>, --here, o --url <url>.");
     process.exit(1);
   }
 
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   return {
     url: url ?? null,
+    buy,
     connectUrl: get("--connect") ?? null,
     useSteel: argv.includes("--steel"),
     dryRun: argv.includes("--dry-run"),

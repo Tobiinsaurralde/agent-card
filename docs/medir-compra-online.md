@@ -135,6 +135,41 @@ en compras online, y son la razón por la que el fundador de OmniHood dijo que s
 en locales físicos y no online. Si el test devuelve alguno de esos con su tarjeta y la misma
 compra pasa con la tuya, quedó probado y no hay código que lo arregle.
 
+## Comprar de punta a punta: `--buy`
+
+`--here` mide la tarjeta pero deja el carrito y la cuenta en manos de un humano, y eso no es
+lo que vendemos. `--buy <dominio>` hace el recorrido completo en Porkbun: busca, agrega al
+carrito, crea la cuenta con los datos de `.env` y llega a la pantalla de la tarjeta.
+
+```bash
+npm run test:checkout -- --buy konextech.xyz
+```
+
+Necesita el perfil del comprador completo en `.env` (`STREET`, `CITY`, `REGION`, `POSTAL`,
+`PHONE`). No se piden en el checkout: pedirlos ahí sería hacer el checkout a mano.
+
+### Lo que aprendimos corriéndolo
+
+**El alta de cuenta y el pago son dos problemas distintos, y sólo uno es nuestro.** Porkbun
+valida el formulario entero antes de habilitar el botón, y el agente lo llena completo —usuario,
+contraseña, mail, nombre, domicilio, provincia, teléfono, términos—. Lo único que no puede
+pasar es el captcha (`porkcaptcha`, con Turnstile abajo).
+
+Eso **no dice nada sobre la tarjeta**: el captcha está antes del pago. Y tiene sentido que
+esté: es una defensa contra el registro masivo de cuentas, no contra pagar. La cuenta es
+provisioning y se hace una vez; lo que un agente tiene que poder hacer solo es entrar a una
+cuenta que ya existe y pagar.
+
+De ahí salen los dos caminos, y el segundo es el que refleja el producto real:
+
+- `--steel` con una `STEEL_API_KEY`: la sesión resuelve el captcha sola. Sirve para probar el
+  caso extremo del alta automatizada.
+- Cuenta ya creada: el agente entra, arma el carrito y paga sin que nadie toque nada.
+
+Los códigos de exit distinguen dónde se cortó, para no confundir un muro del alta con un
+veredicto de la tarjeta: `2` falta perfil, `3` captcha, `4` código por mail, `5` el alta
+rechazó algo (y dice qué).
+
 ## Si dice que no pudo medir
 
 `NO SE PUDO MEDIR` significa que no se entendió el formulario del comercio. **Eso es un bug

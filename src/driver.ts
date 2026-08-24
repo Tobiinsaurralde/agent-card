@@ -160,7 +160,7 @@ export class CheckoutDriver {
         const hit = await findSelector(page, selectors);
         if (hit !== null) found[name as FieldName] = hit;
       }
-      const submit = await findSelector(page, SUBMIT_SELECTORS);
+      const submit = await findSubmitSelector(page);
       if (submit !== null) found.submit = submit;
 
       const hasExpiry =
@@ -226,9 +226,13 @@ export class CheckoutDriver {
 
     const number = await findField(page, FIELD_SELECTORS.number);
     if (number === null) {
+      // Única captura segura del camino de fallo: todavía no llenamos nada, así
+      // que no hay número en pantalla. En los fallos de vencimiento o CVC ya lo
+      // escribimos y una imagen lo filtraría.
       throw new FormNotFoundError(
         "No encontré el campo del número de tarjeta.",
         await describeInputs(page, card),
+        await describePage(page),
       );
     }
     await fillSafely(number, secret.pan, card, "número");
@@ -316,10 +320,36 @@ export class FormNotFoundError extends Error {
   constructor(
     message: string,
     readonly inputs: string[],
+    readonly page: PageSummary | null = null,
   ) {
-    super(`${message}\nCampos que vi en la página:\n${inputs.map((i) => `  · ${i}`).join("\n")}`);
+    const fields =
+      inputs.length === 0
+        ? "  (ninguno: la página puede no ser el checkout)"
+        : inputs.map((i) => `  · ${i}`).join("\n");
+    const where = page === null ? "" : `\nURL: ${page.url}\nTítulo: ${page.title}\nTexto: ${page.text}`;
+    super(`${message}${where}\nCampos que vi en la página:\n${fields}`);
     this.name = "FormNotFoundError";
   }
+}
+
+/** Dónde quedó la página, para poder distinguir un desafío de un checkout. */
+export interface PageSummary {
+  url: string;
+  title: string;
+  text: string;
+}
+
+async function describePage(page: Page): Promise<PageSummary> {
+  const title = await page.title().catch(() => "");
+  const raw = await page
+    .locator("body")
+    .innerText()
+    .catch(() => "");
+  return {
+    url: page.url(),
+    title,
+    text: raw.trim().replace(/\s+/g, " ").slice(0, 400),
+  };
 }
 
 /**
@@ -348,6 +378,33 @@ async function findField(page: Page, selectors: readonly string[]): Promise<Loca
       } catch {
         // Un frame puede morirse mientras lo recorremos; no es un error del intento.
       }
+    }
+  }
+  return null;
+}
+
+/**
+ * Busca el botón de pagar con el mismo alcance que usa `submit()`: solo la
+ * página principal.
+ *
+ * La diferencia con los campos de tarjeta es a propósito y hay que mantenerla.
+ * Los campos viven en iframes del procesador, así que ahí hay que entrar. El
+ * botón de pagar es del comercio y vive en su página; los botones que hay dentro
+ * de los iframes de pago son otra cosa. En el checkout de itch, por ejemplo, el
+ * iframe `elements-inner-link-button-for-card` tiene un `button[type=submit]`
+ * que es el de Stripe Link, no el de cobrar.
+ *
+ * Si el reconocimiento buscara en los iframes reportaría "encontré el submit"
+ * apoyándose en un botón que `submit()` nunca va a mirar, y diría que un comercio
+ * se entiende cuando en realidad el intento real se va a caer sin haber cobrado.
+ */
+async function findSubmitSelector(page: Page): Promise<string | null> {
+  for (const selector of SUBMIT_SELECTORS) {
+    const locator = page.locator(selector).first();
+    try {
+      if ((await locator.count()) > 0 && (await locator.isVisible())) return `${selector}  (página)`;
+    } catch {
+      // idem findField
     }
   }
   return null;
@@ -453,6 +510,14 @@ function describeFrame(frame: Frame): Promise<string[]> {
       return bits.join(" ");
     }),
   );
+}
+
+export async function attachPage(connectUrl: string): Promise<{
+  browser: Browser;
+  page: Page;
+}> {
+  const browser = await chromium.connectOverCDP(connectUrl);
+  return { browser, page: await currentPage(browser) };
 }
 
 async function currentPage(browser: Browser): Promise<Page> {

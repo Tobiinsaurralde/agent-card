@@ -11,7 +11,7 @@
     "harness": "node --import tsx harness/run.ts",
     "recon:stripe": "node --import tsx harness/recon-stripe.ts",
     "mcp": "node --import tsx src/mcp/bin.ts",
-    "test:checkout": "node --import tsx src/bin/checkout-test.ts",
+    "test:checkout": "node --env-file=.env --import tsx src/bin/checkout-test.ts",
     "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit"
   },

@@ -30,7 +30,7 @@ export function findChrome(): string | null {
  * uno fijo hace que choque con cualquier cosa que ya lo esté usando, y en un
  * test eso aparece como falla intermitente sin relación con el código.
  */
-export async function launchChrome(): Promise<LaunchedChrome> {
+export async function launchChrome(opts: { headed?: boolean } = {}): Promise<LaunchedChrome> {
   const binary = findChrome();
   if (binary === null) throw new Error("No encontré Chrome en esta máquina.");
 
@@ -38,7 +38,11 @@ export async function launchChrome(): Promise<LaunchedChrome> {
   const child: ChildProcess = spawn(
     binary,
     [
-      "--headless=new",
+      // Headless sirve para reconocimiento, pero no para un cobro real: los
+      // sistemas antifraude lo detectan y rechazan por eso, y ese rechazo se
+      // confunde con "la tarjeta no sirve", que es la conclusión equivocada
+      // más cara del proyecto.
+      ...(opts.headed === true ? [] : ["--headless=new"]),
       "--remote-debugging-port=0",
       `--user-data-dir=${profile}`,
       "--no-first-run",
