@@ -341,17 +341,17 @@ export function App() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
             <a
-              href="/"
+              href="index.html"
               aria-label="Volver a la página principal"
               className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <img
-                src="/logo-light.png"
+                src="logo-light.png"
                 alt=""
                 className="size-9 shrink-0 rounded-lg border border-border shadow-sm"
               />
               <span className="font-display text-base font-bold tracking-tight">
-                agent-card
+                Konex
               </span>
             </a>
             <Chip tone="warning" dot={false}>
@@ -362,7 +362,7 @@ export function App() {
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             <a
-              href="/panel.html"
+              href="panel.html"
               className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:inline-flex"
             >
               Panel
@@ -875,7 +875,7 @@ export function App() {
 
         <footer className="mt-12 border-t border-border pt-5">
           <p className="text-xs text-muted-foreground">
-            agent-card — capa de control con defaults seguros.
+            Konex — capa de control con defaults seguros.
           </p>
         </footer>
       </main>

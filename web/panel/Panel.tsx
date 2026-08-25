@@ -97,17 +97,17 @@ export function PanelApp() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
             <a
-              href="/"
+              href="index.html"
               aria-label="Volver a la página principal"
               className={cx("flex items-center gap-2.5 rounded-lg", focusRing)}
             >
               <img
-                src="/logo-light.png"
+                src="logo-light.png"
                 alt=""
                 className="size-9 shrink-0 rounded-lg border border-border shadow-sm"
               />
               <span className="font-display text-base font-bold tracking-tight">
-                agent-card
+                Konex
               </span>
             </a>
             <Chip tone="warning" dot={false}>
@@ -118,7 +118,7 @@ export function PanelApp() {
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             <a
-              href="/simulador.html"
+              href="simulador.html"
               className={cx(
                 "hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-flex",
                 focusRing,
@@ -210,7 +210,7 @@ export function PanelApp() {
 
         <footer className="mt-12 border-t border-border pt-5">
           <p className="text-xs text-muted-foreground">
-            agent-card — capa de control con defaults seguros. No emitimos tarjetas:
+            Konex — capa de control con defaults seguros. No emitimos tarjetas:
             la emisión la provee un tercero y esta capa va delante.
           </p>
         </footer>

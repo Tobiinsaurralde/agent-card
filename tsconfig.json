@@ -19,6 +19,7 @@
     "harness/**/*.ts",
     "test/**/*.ts",
     "web/**/*.ts",
+    "web/**/*.d.ts",
     "web/**/*.tsx",
     "vite.config.ts"
   ]

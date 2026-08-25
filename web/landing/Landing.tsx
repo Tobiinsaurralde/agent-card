@@ -54,6 +54,110 @@ function CtaLink({
   );
 }
 
+/**
+ * Dónde caen los mails de la waitlist. Se define en build (`.env`), no acá.
+ *
+ * Si no está, el formulario no se dibuja. Es deliberado: un form sin destino
+ * acepta el mail, dice "gracias" y lo tira, y eso es peor que no tener waitlist
+ * porque nadie se entera hasta que se buscan los registros y no hay ninguno.
+ */
+const WAITLIST_ENDPOINT = (import.meta.env["VITE_WAITLIST_ENDPOINT"] ?? "").trim();
+
+type SendState = { kind: "idle" | "sending" | "ok" } | { kind: "error"; message: string };
+
+function Waitlist() {
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState<SendState>({ kind: "idle" });
+  // Trampa para bots: un humano no ve este campo, así que si viene lleno es spam.
+  const [trap, setTrap] = useState("");
+
+  if (WAITLIST_ENDPOINT === "") return null;
+
+  async function submit(event: React.FormEvent): Promise<void> {
+    event.preventDefault();
+    if (state.kind === "sending") return;
+    if (trap !== "") {
+      setState({ kind: "ok" });
+      return;
+    }
+
+    setState({ kind: "sending" });
+    try {
+      const response = await fetch(WAITLIST_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setState({ kind: "ok" });
+      setEmail("");
+    } catch {
+      // Nunca decir "listo" si no llegó: el que se anotó no va a volver a intentar.
+      setState({
+        kind: "error",
+        message: "Couldn't sign you up. Try again in a moment.",
+      });
+    }
+  }
+
+  if (state.kind === "ok") {
+    return (
+      <p className="mt-8 text-base font-medium text-gold" role="status">
+        You're on the list. We'll write when it charges for real.
+      </p>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-8 max-w-lg">
+      <label htmlFor="waitlist-email" className="text-sm font-medium">
+        Leave your email and we'll tell you when it charges for real.
+      </label>
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+        <input
+          id="waitlist-email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={cx(
+            "min-h-11 flex-1 rounded-lg border border-border bg-card px-4 text-sm",
+            "placeholder:text-muted-foreground",
+            focusRing,
+          )}
+        />
+        <input
+          type="text"
+          name="company"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          value={trap}
+          onChange={(e) => setTrap(e.target.value)}
+          className="hidden"
+        />
+        <button
+          type="submit"
+          disabled={state.kind === "sending"}
+          className={cx(
+            "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-medium",
+            "bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90",
+            "disabled:cursor-not-allowed disabled:opacity-60",
+            focusRing,
+          )}
+        >
+          {state.kind === "sending" ? "Sending…" : "Notify me"}
+        </button>
+      </div>
+      <p className="mt-3 min-h-5 text-sm text-muted-foreground" role="status" aria-live="polite">
+        {state.kind === "error" ? state.message : ""}
+      </p>
+    </form>
+  );
+}
+
 function Reveal({
   children,
   className,
@@ -194,16 +298,16 @@ export function Landing() {
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-6">
           <a
-            href="/"
+            href="index.html"
             className={cx("flex items-center gap-2.5 rounded-lg", focusRing)}
           >
             <img
-              src="/logo-light.png"
+              src="logo-light.png"
               alt=""
               className="size-9 rounded-lg border border-border shadow-sm"
             />
             <span className="font-display text-base font-bold tracking-tight">
-              agent-card
+              Konex
             </span>
           </a>
           <div className="hidden items-center gap-1 md:flex">
@@ -222,7 +326,7 @@ export function Landing() {
           </div>
           <div className="flex items-center gap-2">
             <a
-              href="/panel.html"
+              href="panel.html"
               className={cx(
                 "hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-[color,background-color] duration-100 ease-out hover:bg-accent-soft hover:text-accent sm:inline-flex",
                 focusRing,
@@ -230,7 +334,7 @@ export function Landing() {
             >
               Dashboard
             </a>
-            <CtaLink href="/simulador.html">
+            <CtaLink href="simulador.html">
               Try the simulator
               <ArrowRight className="size-4" aria-hidden="true" />
             </CtaLink>
@@ -280,7 +384,7 @@ export function Landing() {
                 className="animate-fade-up mt-8 flex flex-wrap items-center gap-3"
                 style={{ animationDelay: "180ms" }}
               >
-                <CtaLink href="/simulador.html">
+                <CtaLink href="simulador.html">
                   <Play className="size-4" aria-hidden="true" />
                   Try the simulator
                 </CtaLink>
@@ -642,11 +746,12 @@ export function Landing() {
                   reason to exist — and we'll say it right here.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <CtaLink href="/simulador.html">
+                  <CtaLink href="simulador.html">
                     <Play className="size-4" aria-hidden="true" />
                     Run the attacks yourself
                   </CtaLink>
                 </div>
+                <Waitlist />
               </div>
             </Reveal>
           </div>
@@ -657,18 +762,18 @@ export function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 md:flex-row md:items-center md:justify-between md:px-6">
           <div className="flex items-center gap-3">
             <img
-              src="/logo-light.png"
+              src="logo-light.png"
               alt=""
               className="size-9 rounded-lg border border-border"
             />
-            <span className="font-display text-base font-bold">agent-card</span>
+            <span className="font-display text-base font-bold">Konex</span>
           </div>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
             A control layer, not an issuer. The BIN, the bank and the KYC are
             bought from a provider; we decide whether the charge goes through.
           </p>
           <a
-            href="/simulador.html"
+            href="simulador.html"
             className={cx("rounded-sm text-sm font-medium text-gold underline-offset-4 hover:underline", focusRing)}
           >
             Simulator

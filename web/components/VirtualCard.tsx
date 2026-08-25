@@ -62,7 +62,7 @@ export function VirtualCard({
       >
         <div className="flex items-start justify-between gap-1.5">
           <span className="truncate font-mono text-[11px] font-semibold tracking-wide">
-            agent-card
+            Konex
           </span>
           <span className="shrink-0 whitespace-nowrap rounded-full border border-white/25 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider text-white/80">
             {presetLabel}

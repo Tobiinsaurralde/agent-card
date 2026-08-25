@@ -1,0 +1,64 @@
+#  Publica el sitio en GitHub Pages en cada push a main.
+#
+#  El sitio es estático: la landing, el panel y el simulador corren enteros en el
+#  browser sobre el motor de policy real con un emisor mock. No hay backend que
+#  desplegar y no hay secretos acá adentro — lo único que se inyecta es la URL
+#  pública del formulario de waitlist, que es pública por definición.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  # Para poder publicar a mano sin tener que empujar un commit vacío.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Si entran dos pushes seguidos, que gane el último. No se cancela el que está
+# publicando: dejar Pages a medio actualizar es peor que esperar.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Que el sitio compile no alcanza: si la policy está rota, el simulador
+      # miente y es justo lo que la página promete que no hace.
+      - run: npx tsc --noEmit
+      - run: node --import tsx --test test/*.test.ts
+
+      - name: Build
+        env:
+          # Repo de proyecto: el sitio cuelga de /<repo>/. Con dominio propio,
+          # cambiar a "/".
+          SITE_BASE: /${{ github.event.repository.name }}/
+          VITE_WAITLIST_ENDPOINT: ${{ vars.WAITLIST_ENDPOINT }}
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
