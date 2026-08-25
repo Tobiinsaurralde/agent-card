@@ -45,9 +45,24 @@ export interface ProviderCredentialGrant {
   expiresAt: Date;
 }
 
+/** Una tarjeta del emisor tal como la guardamos para sobrevivir un reinicio. */
+export interface ProviderCardSnapshot {
+  id: string;
+  fundedCents: Cents;
+  currency: string;
+  limit: Cents | null;
+  spent: Cents;
+  closed: boolean;
+}
+
+export interface ProviderSnapshot {
+  seq: number;
+  cards: ProviderCardSnapshot[];
+}
+
 /**
- * Lo que necesitamos de cualquier emisor. La implementación real (Interlace,
- * Karma) va detrás de esta interfaz para que la policy no dependa del rail.
+ * Lo que necesitamos de cualquier emisor. La implementación real va detrás de
+ * esta interfaz para que la policy no dependa del rail.
  *
  * Ojo con lo que NO está acá: no hay `getPan()`. El PAN va del proveedor al
  * cliente MCP directo, sin pasar por nuestro backend. Ver docs/spec.md §3.1.
@@ -63,6 +78,16 @@ export interface CardProvider {
    * pero no rompe la policy.
    */
   credentialGrant?(cardId: string): Promise<ProviderCredentialGrant>;
+  /**
+   * Estado local del emisor, para que sobreviva a un reinicio.
+   *
+   * Opcional a propósito: un emisor de verdad lleva la cuenta de su lado y no
+   * hay nada local que guardar. Esto existe para los proveedores que viven en
+   * memoria, donde perder el estado significa que una tarjeta restaurada apunte
+   * a un id que el proveedor ya no conoce y el cobro explote.
+   */
+  snapshot?(): ProviderSnapshot;
+  restore?(snap: ProviderSnapshot): void;
 }
 
 /**
@@ -124,5 +149,36 @@ export class MockProvider implements CardProvider {
       token: `tok_mock_${Math.random().toString(36).slice(2, 14)}`,
       expiresAt: new Date(Date.now() + 60_000),
     };
+  }
+
+  snapshot(): ProviderSnapshot {
+    return {
+      seq: this.seq,
+      cards: [...this.cards.values()].map((c) => ({
+        id: c.id,
+        fundedCents: c.fundedCents,
+        currency: c.currency,
+        limit: c.limit,
+        spent: c.spent,
+        closed: c.closed,
+      })),
+    };
+  }
+
+  restore(snap: ProviderSnapshot): void {
+    this.seq = snap.seq;
+    this.cards = new Map(
+      snap.cards.map((c) => [
+        c.id,
+        {
+          id: c.id,
+          fundedCents: c.fundedCents,
+          currency: c.currency,
+          closed: c.closed,
+          limit: c.limit,
+          spent: c.spent,
+        },
+      ]),
+    );
   }
 }

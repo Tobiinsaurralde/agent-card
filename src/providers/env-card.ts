@@ -38,6 +38,7 @@ import type {
   ProviderCard,
   ProviderCredentialGrant,
   ProviderResult,
+  ProviderSnapshot,
 } from "../provider.js";
 import type { AuthAttempt, Cents } from "../types.js";
 
@@ -55,7 +56,7 @@ interface Issued {
 
 export class EnvCardProvider implements CardProvider {
   readonly name = "env-manual";
-  private readonly cards = new Map<string, Issued>();
+  private cards = new Map<string, Issued>();
   private seq = 0;
 
   private constructor(private readonly card: CardCredentials) {}
@@ -166,6 +167,41 @@ export class EnvCardProvider implements CardProvider {
       token,
       expiresAt: new Date(Date.now() + GRANT_TTL_MS),
     };
+  }
+
+  /**
+   * Se guarda el consumo, no la tarjeta: el PAN sale del entorno en cada
+   * arranque y nunca toca el disco.
+   */
+  snapshot(): ProviderSnapshot {
+    return {
+      seq: this.seq,
+      cards: [...this.cards.values()].map((c) => ({
+        id: c.id,
+        fundedCents: c.fundedCents,
+        currency: c.currency,
+        limit: c.limit,
+        spent: c.spent,
+        closed: c.closed,
+      })),
+    };
+  }
+
+  restore(snap: ProviderSnapshot): void {
+    this.seq = snap.seq;
+    this.cards = new Map(
+      snap.cards.map((c) => [
+        c.id,
+        {
+          id: c.id,
+          fundedCents: c.fundedCents,
+          currency: c.currency,
+          limit: c.limit,
+          spent: c.spent,
+          closed: c.closed,
+        },
+      ]),
+    );
   }
 }
 

@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { SteelBrowser } from "../browser.js";
 import { EnvCardProvider } from "../providers/env-card.js";
 import { AgentCardService, type ServiceOptions } from "../service.js";
+import { FileStore } from "../store.js";
 import { createMcpServer } from "./server.js";
 
 /**
@@ -29,8 +30,30 @@ async function main(): Promise<void> {
   const budgetUsd = envNumber("AGENT_CARD_BUDGET_USD", 20);
   const maxCardUsd = envNumber("AGENT_CARD_MAX_CARD_USD", 20);
 
+  // El ledger vive acá entre arranques. Si el archivo está corrupto o es de otra
+  // versión, `load()` tira y no arrancamos: seguir sería recargar el presupuesto
+  // y perder lo gastado en silencio.
+  const statePath = process.env.AGENT_CARD_STATE?.trim() || ".agent-card/state.json";
+  const store = new FileStore(statePath);
+  const saved = store.load();
+
+  let service: AgentCardService;
   const options: ServiceOptions = {
     maxCardBudgetCents: Math.round(maxCardUsd * 100),
+    onChange: () => {
+      try {
+        store.save(service.snapshot());
+      } catch (error) {
+        // No cortamos la operación en curso: el cargo ya pasó por el rail y
+        // hacer fallar la llamada invita al agente a reintentar algo que ya se
+        // cobró. Se avisa fuerte y se sigue con el ledger en memoria.
+        const message = error instanceof Error ? error.message : String(error);
+        process.stderr.write(
+          `[agent-card] NO PUDE GUARDAR EL LEDGER: ${message}\n` +
+            "[agent-card] lo que pase desde acá se pierde si reiniciás.\n",
+        );
+      }
+    },
   };
 
   // Sin STEEL_API_KEY el checkout corre en mock y el captcha se simula. Arrancar
@@ -52,8 +75,17 @@ async function main(): Promise<void> {
     cardLabel = provider.label;
   }
 
-  const service = new AgentCardService(options);
-  service.deposit(Math.round(budgetUsd * 100));
+  service = new AgentCardService(options);
+
+  // El depósito inicial es sólo del primer arranque. Repetirlo en cada inicio
+  // era el bug: el presupuesto se recargaba solo y bajar el proceso limpiaba el
+  // cap, que es justo lo que la tarjeta promete que no se puede hacer.
+  if (saved === null) {
+    service.deposit(Math.round(budgetUsd * 100));
+  } else {
+    service.restore(saved);
+  }
+  const treasury = service.budget();
 
   const server = createMcpServer({
     service,
@@ -63,7 +95,10 @@ async function main(): Promise<void> {
   process.stderr.write(
     [
       "[agent-card] servidor MCP arriba en stdio.",
-      `[agent-card] agente="${agentId === "" ? "default" : agentId}" presupuesto=USD ${budgetUsd} techo-por-tarjeta=USD ${maxCardUsd}`,
+      saved === null
+        ? `[agent-card] ledger nuevo en ${statePath} — depositados USD ${budgetUsd}.`
+        : `[agent-card] ledger recuperado de ${statePath} — gastados USD ${(treasury.spentCents / 100).toFixed(2)}, disponibles USD ${(treasury.availableCents / 100).toFixed(2)}.`,
+      `[agent-card] agente="${agentId === "" ? "default" : agentId}" techo-por-tarjeta=USD ${maxCardUsd}`,
       cardLabel === null
         ? `[agent-card] emisor="${service.providerName}" — NO hay cargos reales; la plata no se mueve.`
         : `[agent-card] emisor="${service.providerName}" tarjeta=${cardLabel} — CARGOS REALES: el número cobra de verdad.`,

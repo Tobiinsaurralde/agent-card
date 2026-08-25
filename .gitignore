@@ -9,3 +9,6 @@ harness/results/
 # La sesión autenticada del agente y el código 2FA de un solo uso.
 .agent-profile/
 .email-code
+
+# Ledger del MCP: montos y recibos reales, no van al repo.
+.agent-card/

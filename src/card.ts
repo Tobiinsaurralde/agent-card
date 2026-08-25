@@ -2,6 +2,7 @@ import { evaluate, committedCents, fmt } from "./policy.js";
 import type { CardProvider, ProviderResult } from "./provider.js";
 import type {
   AuthAttempt,
+  AuthKind,
   CardPolicy,
   CardState,
   Cents,
@@ -17,6 +18,42 @@ export interface AttemptOutcome {
   provider: ProviderResult | null;
   /** Verdadero solo si policy y rail aprobaron. */
   approved: boolean;
+}
+
+/** Un intento con la fecha en ISO, que es lo único que JSON no sabe guardar. */
+export interface AttemptSnapshot {
+  amountCents: Cents;
+  currency: string;
+  merchant: string;
+  mcc?: string;
+  kind: AuthKind;
+  at: string;
+  taskId?: string;
+}
+
+export interface OutcomeSnapshot {
+  attempt: AttemptSnapshot;
+  decision: Decision;
+  provider: ProviderResult | null;
+  approved: boolean;
+}
+
+/**
+ * Lo que hay que guardar de una tarjeta para reconstruirla idéntica.
+ *
+ * No guarda `state.charges`: cada cargo se deriva de su outcome, exactamente
+ * como lo arma `attempt()`. Guardar los dos sería invitarlos a divergir, y el
+ * día que difieran gana el que la policy lee, que es `charges`.
+ */
+export interface CardSnapshot {
+  providerCardId: string;
+  providerLast4: string | null;
+  policy: CardPolicy;
+  openedAt: string;
+  closed: boolean;
+  taskComplete: boolean;
+  killed: boolean;
+  outcomes: OutcomeSnapshot[];
 }
 
 /**
@@ -69,6 +106,59 @@ export class ControlledCard {
       opts.policy,
       opts.now ?? new Date(),
     );
+  }
+
+  /**
+   * Reconstruye una tarjeta guardada.
+   *
+   * El proveedor se vuelve a inyectar porque es una conexión viva, no un dato:
+   * lo que se guarda es a qué tarjeta del emisor apunta, no cómo hablarle.
+   */
+  static restore(provider: CardProvider, snap: CardSnapshot): ControlledCard {
+    const card = new ControlledCard(
+      snap.providerCardId,
+      snap.providerLast4,
+      provider,
+      snap.policy,
+      new Date(snap.openedAt),
+    );
+    card.state.closed = snap.closed;
+    card.state.taskComplete = snap.taskComplete;
+    card.state.killed = snap.killed;
+
+    for (const saved of snap.outcomes) {
+      const attempt = attemptFromJson(saved.attempt);
+      card.outcomes.push({
+        attempt,
+        decision: saved.decision,
+        provider: saved.provider,
+        approved: saved.approved,
+      });
+      card.state.charges.push({
+        ...attempt,
+        allowed: saved.approved,
+        code: saved.decision.code,
+      });
+    }
+    return card;
+  }
+
+  snapshot(): CardSnapshot {
+    return {
+      providerCardId: this.providerCardId,
+      providerLast4: this.providerLast4,
+      policy: this.policy,
+      openedAt: this.state.openedAt.toISOString(),
+      closed: this.state.closed,
+      taskComplete: this.state.taskComplete,
+      killed: this.state.killed,
+      outcomes: this.outcomes.map((o) => ({
+        attempt: attemptToJson(o.attempt),
+        decision: o.decision,
+        provider: o.provider,
+        approved: o.approved,
+      })),
+    };
   }
 
   /**
@@ -150,4 +240,28 @@ export class ControlledCard {
   history(): readonly AttemptOutcome[] {
     return this.outcomes;
   }
+}
+
+export function attemptToJson(a: AuthAttempt): AttemptSnapshot {
+  return {
+    amountCents: a.amountCents,
+    currency: a.currency,
+    merchant: a.merchant,
+    kind: a.kind,
+    at: a.at.toISOString(),
+    ...(a.mcc !== undefined ? { mcc: a.mcc } : {}),
+    ...(a.taskId !== undefined ? { taskId: a.taskId } : {}),
+  };
+}
+
+export function attemptFromJson(a: AttemptSnapshot): AuthAttempt {
+  return {
+    amountCents: a.amountCents,
+    currency: a.currency,
+    merchant: a.merchant,
+    kind: a.kind,
+    at: new Date(a.at),
+    ...(a.mcc !== undefined ? { mcc: a.mcc } : {}),
+    ...(a.taskId !== undefined ? { taskId: a.taskId } : {}),
+  };
 }

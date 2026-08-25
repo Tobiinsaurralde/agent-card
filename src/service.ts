@@ -1,8 +1,13 @@
 import { MockBrowser, type CheckoutBrowser, type CheckoutSession } from "./browser.js";
-import { ControlledCard } from "./card.js";
+import { ControlledCard, type CardSnapshot } from "./card.js";
 import { safePolicy } from "./defaults.js";
 import { fmt } from "./policy.js";
-import { MockProvider, type CardProvider, type ProviderCredentialGrant } from "./provider.js";
+import {
+  MockProvider,
+  type CardProvider,
+  type ProviderCredentialGrant,
+  type ProviderSnapshot,
+} from "./provider.js";
 import type { AuthKind, CaptchaEvent, Cents, Decision, DecisionCode } from "./types.js";
 
 /**
@@ -98,10 +103,54 @@ export interface ServiceOptions {
   browser?: CheckoutBrowser;
   now?: () => Date;
   /**
-   * Techo por tarjeta. La beta de Interlace corta en USD 20 por tarjeta, y en el
-   * test conviene que ese techo sea explícito y no una sorpresa del rail.
+   * Techo por tarjeta: ninguna tarjeta puede nacer con más presupuesto que esto,
+   * aunque haya saldo. Acota cuánto puede perderse de una sola vez.
    */
   maxCardBudgetCents?: Cents;
+  /**
+   * Se llama después de cada cambio que mueve plata o estado de tarjetas.
+   *
+   * El servicio no sabe guardar: solo avisa. Quien lo escucha decide si escribe
+   * a disco, a una base o a nada.
+   */
+  onChange?: () => void;
+}
+
+/** Una tarjeta emitida, tal como se guarda. */
+export interface EntrySnapshot {
+  handle: string;
+  agentId: string;
+  taskId: string;
+  merchant: string;
+  reason: string | null;
+  budgetCents: Cents;
+  perTransactionCents: Cents;
+  ttlSeconds: number;
+  singleUse: boolean;
+  last4: string;
+  openedAt: string;
+  killed: boolean;
+  card: CardSnapshot;
+}
+
+export interface ReceiptSnapshot extends Omit<Receipt, "at" | "captcha"> {
+  at: string;
+  captcha: (Omit<CaptchaEvent, "at"> & { at: string }) | null;
+}
+
+/**
+ * Todo lo que el servicio necesita para volver a arrancar donde quedó.
+ *
+ * Incluye el estado del emisor porque si las tarjetas vuelven y el proveedor no,
+ * cada handle restaurado apunta a un id que el proveedor ya no conoce.
+ */
+export interface ServiceSnapshot {
+  depositedCents: Cents;
+  receiptSeq: number;
+  killed: boolean;
+  entries: EntrySnapshot[];
+  receipts: ReceiptSnapshot[];
+  provider: ProviderSnapshot | null;
 }
 
 interface Entry {
@@ -143,6 +192,7 @@ export class AgentCardService {
   private readonly browser: CheckoutBrowser;
   private readonly now: () => Date;
   private readonly maxCardBudgetCents: Cents;
+  private readonly onChange: () => void;
   private readonly entries = new Map<string, Entry>();
   private readonly receipts: Receipt[] = [];
   private depositedCents: Cents = 0;
@@ -154,10 +204,85 @@ export class AgentCardService {
     this.browser = opts.browser ?? new MockBrowser();
     this.now = opts.now ?? (() => new Date());
     this.maxCardBudgetCents = opts.maxCardBudgetCents ?? 20_00;
+    this.onChange = opts.onChange ?? (() => {});
   }
 
   get providerName(): string {
     return this.provider.name;
+  }
+
+  /** Ya hay algo cargado: sirve para no volver a depositar el presupuesto inicial. */
+  get isEmpty(): boolean {
+    return this.depositedCents === 0 && this.entries.size === 0 && this.receipts.length === 0;
+  }
+
+  snapshot(): ServiceSnapshot {
+    return {
+      depositedCents: this.depositedCents,
+      receiptSeq: this.receiptSeq,
+      killed: this.killed,
+      entries: [...this.entries.values()].map((e) => ({
+        handle: e.handle,
+        agentId: e.agentId,
+        taskId: e.taskId,
+        merchant: e.merchant,
+        reason: e.reason,
+        budgetCents: e.budgetCents,
+        perTransactionCents: e.perTransactionCents,
+        ttlSeconds: e.ttlSeconds,
+        singleUse: e.singleUse,
+        last4: e.last4,
+        openedAt: e.openedAt.toISOString(),
+        killed: e.killed,
+        card: e.card.snapshot(),
+      })),
+      receipts: this.receipts.map((r) => ({
+        ...r,
+        at: r.at.toISOString(),
+        captcha: r.captcha === null ? null : { ...r.captcha, at: r.captcha.at.toISOString() },
+      })),
+      provider: this.provider.snapshot?.() ?? null,
+    };
+  }
+
+  /**
+   * Vuelve a cargar un estado guardado. Reemplaza lo que haya: restaurar sobre
+   * un servicio con datos mezclaría dos ledgers y ninguno de los dos cerraría.
+   */
+  restore(snap: ServiceSnapshot): void {
+    // El emisor primero: las tarjetas restauradas apuntan a sus ids.
+    if (snap.provider !== null) this.provider.restore?.(snap.provider);
+
+    this.entries.clear();
+    this.receipts.length = 0;
+    this.depositedCents = snap.depositedCents;
+    this.receiptSeq = snap.receiptSeq;
+    this.killed = snap.killed;
+
+    for (const e of snap.entries) {
+      this.entries.set(e.handle, {
+        handle: e.handle,
+        agentId: e.agentId,
+        taskId: e.taskId,
+        merchant: e.merchant,
+        reason: e.reason,
+        budgetCents: e.budgetCents,
+        perTransactionCents: e.perTransactionCents,
+        ttlSeconds: e.ttlSeconds,
+        singleUse: e.singleUse,
+        last4: e.last4,
+        openedAt: new Date(e.openedAt),
+        card: ControlledCard.restore(this.provider, e.card),
+        killed: e.killed,
+      });
+    }
+    for (const r of snap.receipts) {
+      this.receipts.push({
+        ...r,
+        at: new Date(r.at),
+        captcha: r.captcha === null ? null : { ...r.captcha, at: new Date(r.captcha.at) },
+      });
+    }
   }
 
   deposit(amountCents: Cents): Treasury {
@@ -165,6 +290,7 @@ export class AgentCardService {
       throw new ServiceError("INVALID_POLICY", "El depósito tiene que ser mayor a cero.");
     }
     this.depositedCents += amountCents;
+    this.onChange();
     return this.budget();
   }
 
@@ -257,6 +383,7 @@ export class AgentCardService {
       killed: false,
     };
     this.entries.set(entry.handle, entry);
+    this.onChange();
     return this.toIssued(entry);
   }
 
@@ -337,6 +464,7 @@ export class AgentCardService {
       captcha: req.captcha ?? null,
     };
     this.receipts.push(receipt);
+    this.onChange();
     return receipt;
   }
 
@@ -384,6 +512,7 @@ export class AgentCardService {
   async closeCard(handle: string): Promise<CardStatus> {
     const entry = this.require(handle);
     await entry.card.close();
+    this.onChange();
     return this.toStatus(entry);
   }
 
@@ -399,6 +528,7 @@ export class AgentCardService {
       await entry.card.completeTask();
       closed += 1;
     }
+    if (closed > 0) this.onChange();
     return closed;
   }
 
@@ -411,11 +541,15 @@ export class AgentCardService {
       entry.killed = true;
       count += 1;
     }
+    // Siempre, aunque no haya matado ninguna: el flag global cambió y tiene que
+    // sobrevivir al reinicio. Si no, apagar todo y reiniciar lo vuelve a prender.
+    this.onChange();
     return count;
   }
 
   releaseKill(): void {
     this.killed = false;
+    this.onChange();
   }
 
   private require(handle: string): Entry {
