@@ -86,6 +86,7 @@ const FIELD_SELECTORS = {
     'input[id*="card-number" i]',
     'input[placeholder*="card number" i]',
     'input[placeholder*="número de tarjeta" i]',
+    'input[placeholder*="0000 0000" i]',
     'input[aria-label*="card number" i]',
   ],
   expiry: [
@@ -118,6 +119,8 @@ const FIELD_SELECTORS = {
     'input[name*="nameOnCard" i]',
     'input[placeholder*="name on card" i]',
     'input[placeholder*="titular" i]',
+    'input[placeholder*="John Doe" i]',
+    'input[aria-label*="name on card" i]',
   ],
 } as const;
 
@@ -131,6 +134,9 @@ const SUBMIT_SELECTORS = [
   "button:has-text('Pagar'):visible",
   "button:has-text('Finalizar'):visible",
   "button:has-text('Confirmar'):visible",
+  "button:has-text('Save'):visible",
+  "button:has-text('Add card'):visible",
+  "button:has-text('Add'):visible",
 ];
 
 export class CheckoutDriver {

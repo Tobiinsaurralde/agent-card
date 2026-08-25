@@ -12,6 +12,8 @@
     "recon:stripe": "node --import tsx harness/recon-stripe.ts",
     "mcp": "node --import tsx src/mcp/bin.ts",
     "test:checkout": "node --env-file=.env --import tsx src/bin/checkout-test.ts",
+    "pay": "node --env-file=.env --import tsx src/bin/mcp-pay.ts",
+    "test:porkbun": "node --env-file=.env --import tsx src/bin/porkbun-test.ts",
     "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit"
   },

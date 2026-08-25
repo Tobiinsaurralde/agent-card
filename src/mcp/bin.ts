@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { SteelBrowser } from "../browser.js";
+import { EnvCardProvider } from "../providers/env-card.js";
 import { AgentCardService, type ServiceOptions } from "../service.js";
 import { createMcpServer } from "./server.js";
 
@@ -39,6 +40,18 @@ async function main(): Promise<void> {
     options.browser = SteelBrowser.fromEnv();
   }
 
+  // Con el gate prendido, el emisor es una tarjeta real y `get_card_credentials`
+  // devuelve un número que cobra de verdad. Sin el gate, mock: la plata no se
+  // mueve. Que la diferencia sea una sola variable es a propósito, y que falle
+  // el arranque si la tarjeta está mal cargada también.
+  const realCard = process.env.AGENT_CARD_ALLOW_MANUAL_PAN?.trim() === "1";
+  let cardLabel: string | null = null;
+  if (realCard) {
+    const provider = EnvCardProvider.fromEnv();
+    options.provider = provider;
+    cardLabel = provider.label;
+  }
+
   const service = new AgentCardService(options);
   service.deposit(Math.round(budgetUsd * 100));
 
@@ -51,7 +64,9 @@ async function main(): Promise<void> {
     [
       "[agent-card] servidor MCP arriba en stdio.",
       `[agent-card] agente="${agentId === "" ? "default" : agentId}" presupuesto=USD ${budgetUsd} techo-por-tarjeta=USD ${maxCardUsd}`,
-      `[agent-card] emisor="${service.providerName}" — NO hay cargos reales; la plata no se mueve.`,
+      cardLabel === null
+        ? `[agent-card] emisor="${service.providerName}" — NO hay cargos reales; la plata no se mueve.`
+        : `[agent-card] emisor="${service.providerName}" tarjeta=${cardLabel} — CARGOS REALES: el número cobra de verdad.`,
       steelKey !== undefined && steelKey !== ""
         ? "[agent-card] checkout con Steel: el captcha se resuelve en la sesión."
         : "[agent-card] sin STEEL_API_KEY: checkout mock, captcha simulado.",

@@ -32,6 +32,8 @@ export class ControlledCard {
 
   private constructor(
     readonly providerCardId: string,
+    /** Últimos cuatro que dio el emisor. `null` si no los expone. */
+    readonly providerLast4: string | null,
     private readonly provider: CardProvider,
     readonly policy: CardPolicy,
     openedAt: Date,
@@ -62,6 +64,7 @@ export class ControlledCard {
     });
     return new ControlledCard(
       card.id,
+      card.last4 ?? null,
       opts.provider,
       opts.policy,
       opts.now ?? new Date(),

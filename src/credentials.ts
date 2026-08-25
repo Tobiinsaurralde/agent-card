@@ -58,28 +58,29 @@ export class CardCredentials {
       );
     }
 
-    const pan = digits(required(env, "AGENT_CARD_TEST_PAN"));
-    const cvc = digits(required(env, "AGENT_CARD_TEST_CVC"));
-    const name = required(env, "AGENT_CARD_TEST_NAME").trim();
     const { month, year } = parseExpiry(required(env, "AGENT_CARD_TEST_EXP"));
 
-    if (pan.length < 13 || pan.length > 19) {
-      throw new Error(`El PAN tiene ${pan.length} dígitos; se esperaban entre 13 y 19.`);
-    }
-    if (!luhn(pan)) {
-      // Si el número no valida, el comercio va a decir "datos inválidos" y vamos
-      // a creer que la tarjeta no sirve. Cortar acá evita ese diagnóstico falso.
-      throw new Error(
-        "El PAN no pasa la validación de Luhn: está mal tipeado. " +
-          "Corregilo antes de correr el test, o el rechazo del comercio va a ser culpa nuestra.",
-      );
-    }
-    if (cvc.length < 3 || cvc.length > 4) {
-      throw new Error(`El CVC tiene ${cvc.length} dígitos; se esperaban 3 o 4.`);
-    }
-    if (name === "") throw new Error("AGENT_CARD_TEST_NAME está vacío.");
+    return new CardCredentials(
+      checked({
+        pan: digits(required(env, "AGENT_CARD_TEST_PAN")),
+        cvc: digits(required(env, "AGENT_CARD_TEST_CVC")),
+        expMonth: month,
+        expYear: year,
+        name: required(env, "AGENT_CARD_TEST_NAME").trim(),
+      }),
+    );
+  }
 
-    return new CardCredentials({ pan, cvc, expMonth: month, expYear: year, name });
+  /**
+   * La tarjeta que llegó del emisor, canjeando el grant de `get_card_credentials`.
+   *
+   * Este es el camino de producción y no necesita gate: el número no salió de
+   * nuestra config, vino del emisor al cliente. Se valida igual que la del
+   * entorno, porque un PAN roto contestado por un endpoint se disfraza de
+   * "tarjeta rechazada" exactamente igual que uno mal tipeado.
+   */
+  static fromIssuer(input: RevealedCard): CardCredentials {
+    return new CardCredentials(checked(input));
   }
 
   /** Para tests, sin tocar el entorno ni el gate. */
@@ -121,6 +122,30 @@ export class CardCredentials {
   [Symbol.for("nodejs.util.inspect.custom")](): string {
     return this.toString();
   }
+}
+
+/**
+ * Valida antes de que el comercio opine.
+ *
+ * Un PAN mal tipeado hace que el checkout diga "datos inválidos" y que nosotros
+ * concluyamos que la tarjeta no sirve. Ese diagnóstico falso es peor que un
+ * error acá, que cuesta cero.
+ */
+function checked(input: RevealedCard): RevealedCard {
+  if (input.pan.length < 13 || input.pan.length > 19) {
+    throw new Error(`El PAN tiene ${input.pan.length} dígitos; se esperaban entre 13 y 19.`);
+  }
+  if (!luhn(input.pan)) {
+    throw new Error(
+      "El PAN no pasa la validación de Luhn: está mal tipeado. " +
+        "Corregilo antes de correr el test, o el rechazo del comercio va a ser culpa nuestra.",
+    );
+  }
+  if (input.cvc.length < 3 || input.cvc.length > 4) {
+    throw new Error(`El CVC tiene ${input.cvc.length} dígitos; se esperaban 3 o 4.`);
+  }
+  if (input.name.trim() === "") throw new Error("La tarjeta vino sin titular.");
+  return input;
 }
 
 function required(env: NodeJS.ProcessEnv, key: string): string {

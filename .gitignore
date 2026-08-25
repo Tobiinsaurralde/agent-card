@@ -5,3 +5,7 @@ harness/results/
 .env.local
 *.log
 .DS_Store
+
+# La sesión autenticada del agente y el código 2FA de un solo uso.
+.agent-profile/
+.email-code

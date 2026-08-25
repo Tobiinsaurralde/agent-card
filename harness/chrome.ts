@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -30,11 +30,30 @@ export function findChrome(): string | null {
  * uno fijo hace que choque con cualquier cosa que ya lo esté usando, y en un
  * test eso aparece como falla intermitente sin relación con el código.
  */
-export async function launchChrome(opts: { headed?: boolean } = {}): Promise<LaunchedChrome> {
+export async function launchChrome(
+  opts: { headed?: boolean; profileDir?: string } = {},
+): Promise<LaunchedChrome> {
   const binary = findChrome();
   if (binary === null) throw new Error("No encontré Chrome en esta máquina.");
 
-  const profile = await mkdtemp(join(tmpdir(), "agent-card-chrome-"));
+  // Un perfil persistente es lo que hace que el agente no tenga que volver a
+  // autenticarse en cada compra. Los comercios piden 2FA por mail al entrar, y
+  // con un perfil descartable eso pasa siempre: la sesión muere con el proceso.
+  // Así funciona la infraestructura de agentes de verdad, con contextos que
+  // sobreviven entre corridas.
+  const persistent = opts.profileDir !== undefined;
+  const profile = persistent
+    ? opts.profileDir!
+    : await mkdtemp(join(tmpdir(), "agent-card-chrome-"));
+  if (persistent) await mkdir(profile, { recursive: true });
+
+  // Chrome publica el puerto en un archivo dentro del perfil, y con un perfil
+  // persistente el de la corrida anterior sigue ahí. Sin borrarlo, leemos el
+  // puerto viejo y nos conectamos a un Chrome que ya no existe: aparece como
+  // ECONNREFUSED antes de que el navegador nuevo termine de arrancar.
+  const portFile = join(profile, "DevToolsActivePort");
+  await rm(portFile, { force: true });
+
   const child: ChildProcess = spawn(
     binary,
     [
@@ -54,10 +73,10 @@ export async function launchChrome(opts: { headed?: boolean } = {}): Promise<Lau
 
   const cleanup = async (): Promise<void> => {
     child.kill("SIGKILL");
-    await rm(profile, { recursive: true, force: true });
+    // Borrar un perfil persistente sería borrar la sesión que vinimos a guardar.
+    if (!persistent) await rm(profile, { recursive: true, force: true });
   };
 
-  const portFile = join(profile, "DevToolsActivePort");
   const deadline = Date.now() + 20_000;
   while (Date.now() < deadline) {
     try {
@@ -74,5 +93,9 @@ export async function launchChrome(opts: { headed?: boolean } = {}): Promise<Lau
   }
 
   await cleanup();
-  throw new Error("Chrome no publicó el puerto de depuración en 20s.");
+  throw new Error(
+    persistent
+      ? `Chrome no publicó el puerto en 20s. Puede haber otro Chrome usando ${profile}.`
+      : "Chrome no publicó el puerto de depuración en 20s.",
+  );
 }

@@ -5,10 +5,23 @@
  */
 const DEFAULT_CDP = "http://127.0.0.1:9222";
 
-/** El código de verificación del alta, si nos lo dejaron a mano. */
-async function envEmailCode(): Promise<string | null> {
-  const code = process.env["AGENT_CARD_TEST_EMAIL_CODE"]?.trim();
-  return code === undefined || code === "" ? null : code;
+/**
+ * Dónde vive la sesión del agente entre compras. Un perfil persistente es lo que
+ * evita que el comercio pida 2FA por mail en cada corrida.
+ */
+const DEFAULT_PROFILE = ".agent-profile";
+
+/** El archivo por donde entra el código 2FA mientras el agente espera. */
+const CODE_FILE = ".email-code";
+
+/**
+ * El código de verificación: primero el que ya esté en el entorno, y si no,
+ * esperando el archivo sin soltar la sesión.
+ */
+function emailCodeSource(): EmailCodeSource {
+  const fromEnv = process.env["AGENT_CARD_TEST_EMAIL_CODE"]?.trim();
+  if (fromEnv !== undefined && fromEnv !== "") return async () => fromEnv;
+  return codeFromFile({ path: resolve(CODE_FILE) });
 }
 
 /**
@@ -28,6 +41,8 @@ import { launchChrome } from "../../harness/chrome.js";
 import { buyerFromEnv, MissingBuyerFieldError } from "../buyer.js";
 import { DECLINE_MEANING, explain } from "../checkout.js";
 import { CardCredentials } from "../credentials.js";
+import { AgentCardClient, DeniedError, type CardGrant } from "../mcp/agent-client.js";
+import { codeFromFile, type EmailCodeSource } from "../otp.js";
 import { CheckoutDriver, FormNotFoundError } from "../driver.js";
 import {
   AccountCaptchaError,
@@ -56,10 +71,17 @@ interface Args {
   /** Dominio a comprar de punta a punta. El agente no espera el carrito armado. */
   buy: string | null;
   merchant: Merchant;
+  /** Carpeta del perfil de Chrome, para que la sesión sobreviva entre corridas. */
+  profile: string;
   connectUrl: string | null;
   useSteel: boolean;
   dryRun: boolean;
   screenshot: string;
+  /** La tarjeta la pide el agente por MCP en vez de salir del `.env`. */
+  viaMcp: boolean;
+  /** Tope de la tarjeta, en dólares. Obligatorio con --via-mcp. */
+  amountUsd: number | null;
+  taskId: string;
 }
 
 const CHROME_HINT = `
@@ -79,7 +101,7 @@ async function main(): Promise<void> {
   let launched: Awaited<ReturnType<typeof launchChrome>> | null = null;
 
   if (args.buy !== null && args.connectUrl === null && !args.useSteel) {
-    launched = await launchChrome({ headed: true });
+    launched = await launchChrome({ headed: true, profileDir: resolve(args.profile) });
     args.connectUrl = launched.cdpUrl;
   }
 
@@ -88,7 +110,7 @@ async function main(): Promise<void> {
       const buyer = buyerFromEnv();
       const connectUrl = args.connectUrl ?? DEFAULT_CDP;
       console.log(`Comprando ${args.buy} en ${args.merchant}. El agente arma el carrito y la cuenta.`);
-      const prep = { domain: args.buy, buyer, connectUrl, emailCode: envEmailCode };
+      const prep = { domain: args.buy, buyer, connectUrl, emailCode: emailCodeSource() };
       if (args.merchant === "spaceship") await prepareSpaceshipCheckout(prep);
       else await preparePorkbunCheckout(prep);
       args.url = null;
@@ -158,14 +180,77 @@ async function main(): Promise<void> {
       process.exitCode = 3;
       return;
     }
+    if (error instanceof DeniedError) {
+      console.error("");
+      console.error(`EL SERVIDOR DIJO NO (${error.code}): ${error.message}`);
+      console.error("");
+      console.error("La tarjeta no se tocó, y el navegador no se abrió al vacío.");
+      console.error("Esto es la policy haciendo su trabajo, no un bug. Subir --amount");
+      console.error("es la respuesta solo si de verdad querés gastar eso.");
+      process.exitCode = 6;
+      return;
+    }
     throw error;
   } finally {
     if (launched !== null) await launched.kill();
   }
 }
 
+/**
+ * La tarjeta pedida por protocolo: presupuesto, emisión, preflight y canje.
+ *
+ * El preflight va antes de abrir el navegador. Si la policy va a decir que no,
+ * el costo de enterarse tiene que ser una tool call, no un checkout a medio
+ * llenar con un número real ya tipeado en un formulario.
+ */
+async function cardFromMcp(
+  args: Args,
+): Promise<{ mcp: AgentCardClient; grant: CardGrant; card: CardCredentials }> {
+  const amountUsd = args.amountUsd;
+  if (amountUsd === null) {
+    throw new Error("--via-mcp necesita --amount <usd>: un tope que nadie eligió no es un tope.");
+  }
+
+  const mcp = await AgentCardClient.spawn();
+  try {
+    const budget = await mcp.budget();
+    console.log(`Emisor:    ${budget.provider}`);
+    console.log(`Disponible: USD ${budget.availableUsd}`);
+
+    const grant = await mcp.requestCard({
+      amountUsd,
+      merchant: args.merchant === "spaceship" ? "spaceship.com" : "porkbun.com",
+      taskId: args.taskId,
+      reason: args.buy === null ? "compra de prueba" : `comprar ${args.buy}`,
+      // El número va a quedar en este proceso y en el DOM del comercio. Que la
+      // tarjeta muera con el primer cargo es lo que hace que eso no importe.
+      singleUse: true,
+    });
+
+    console.log(`Tarjeta:   ${grant.handle} (••${grant.last4}), tope USD ${grant.lifetimeCapUsd}`);
+
+    await mcp.checkCharge(grant.handle, amountUsd);
+    const card = await mcp.credentials(grant.handle);
+    return { mcp, grant, card };
+  } catch (error) {
+    await mcp.close();
+    throw error;
+  }
+}
+
 async function pay(args: Args): Promise<void> {
-  const card = CardCredentials.fromEnv();
+  let mcp: AgentCardClient | null = null;
+  let grant: CardGrant | null = null;
+  let card: CardCredentials;
+
+  if (args.viaMcp) {
+    const fromMcp = await cardFromMcp(args);
+    mcp = fromMcp.mcp;
+    grant = fromMcp.grant;
+    card = fromMcp.card;
+  } else {
+    card = CardCredentials.fromEnv();
+  }
 
   let session: CheckoutSession | null = null;
   let connectUrl = args.connectUrl;
@@ -214,6 +299,10 @@ async function pay(args: Args): Promise<void> {
     console.log("");
     console.log(verdictAdvice(report.outcome));
 
+    if (mcp !== null && grant !== null) {
+      await settle(mcp, grant, args.amountUsd ?? 0, report.outcome.kind);
+    }
+
     // Un rechazo estructural es un resultado válido del test, no un fallo de la
     // corrida: salir con 0 para no confundir "midió bien" con "se rompió".
     process.exitCode = 0;
@@ -240,7 +329,55 @@ async function pay(args: Args): Promise<void> {
     process.exitCode = 1;
   } finally {
     if (session !== null) await session.close().catch(() => undefined);
+    if (mcp !== null) {
+      // La tarea se cierra pase lo que pase, incluso si el intento explotó a
+      // mitad de camino: una tarjeta viva que nadie está mirando es el problema
+      // que este proyecto dice resolver.
+      await mcp.completeTask(args.taskId).catch(() => undefined);
+      await mcp.close();
+    }
   }
+}
+
+/**
+ * Cerrar el círculo contra el servidor.
+ *
+ * `record_charge` no mueve plata: eso ya pasó en el comercio. Es lo que hace que
+ * el gasto quede atribuido a la tarea. Sin esto la tarjeta parece intacta
+ * después de haber cobrado, y el presupuesto miente.
+ *
+ * Un veredicto "desconocido" se registra igual, asumiendo que la plata salió.
+ * Es la asimetría correcta: dar por gastado algo que no salió deja plata sin
+ * usar, y darlo por no gastado deja un agujero en el presupuesto y habilita
+ * gastar de nuevo lo mismo.
+ */
+async function settle(
+  mcp: AgentCardClient,
+  grant: CardGrant,
+  amountUsd: number,
+  kind: string,
+): Promise<void> {
+  if (kind !== "aprobado" && kind !== "desconocido") {
+    console.log("");
+    console.log("No registro el cargo: el comercio no cobró.");
+    return;
+  }
+
+  const verdict = await mcp.recordCharge(grant.handle, amountUsd).catch((error: unknown) => {
+    console.error(`No pude registrar el cargo: ${message(error)}`);
+    return null;
+  });
+  if (verdict === null) return;
+
+  console.log("");
+  if (kind === "desconocido") {
+    console.log("Registro el cargo aunque el veredicto sea dudoso: asumo que la plata salió.");
+  }
+  console.log(
+    verdict.approved
+      ? `Cargo registrado contra ${grant.handle}: USD ${amountUsd}.`
+      : `El servidor no lo registró (${verdict.code}): ${verdict.reason}`,
+  );
 }
 
 /**
@@ -326,8 +463,15 @@ function parseArgs(argv: string[]): Args {
     console.error("");
     console.error("Opciones:");
     console.error("  --buy <dominio>      De punta a punta: busca, arma el carrito, cuenta, paga.");
+    console.error("  --via-mcp            La tarjeta la pide el agente por MCP, no sale del .env.");
+    console.error("                       Es el camino de verdad: el tope lo concede el servidor");
+    console.error("                       y el cargo queda atribuido a la tarea. Pide --amount.");
+    console.error("  --amount <usd>       Tope de la tarjeta. Lo que esperás pagar, no más.");
+    console.error("  --task <id>          Tarea que origina la tarjeta. Default: del dominio.");
     console.error("  --at <comercio>      spaceship (default) o porkbun. Spaceship no tiene");
     console.error("                       captcha en el alta; el de Porkbun no lo pasa un agente.");
+    console.error(`  --profile <carpeta>  Perfil de Chrome. Default: ${DEFAULT_PROFILE}`);
+    console.error("                       Persiste la sesión, así el 2FA se hace una sola vez.");
     console.error("  --here               Usa la pestaña que ya tenés abierta, sin navegar.");
     console.error("                       Es lo que querés casi siempre: los checkouts son de");
     console.error("                       varios pasos y navegar te saca del carrito que armaste.");
@@ -355,14 +499,35 @@ function parseArgs(argv: string[]): Args {
   }
 
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+  const viaMcp = argv.includes("--via-mcp");
+  const rawAmount = get("--amount");
+  let amountUsd: number | null = null;
+  if (rawAmount !== undefined) {
+    amountUsd = Number(rawAmount);
+    if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
+      console.error(`--amount "${rawAmount}" no es un monto en dólares.`);
+      process.exit(1);
+    }
+  }
+  if (viaMcp && amountUsd === null) {
+    console.error("--via-mcp necesita --amount <usd>: es el tope que el agente le pide al servidor.");
+    console.error("Poné lo que esperás pagar. Si el comercio cobra más, la policy lo rechaza.");
+    process.exit(1);
+  }
+
   return {
     url: url ?? null,
     buy,
     merchant: at,
+    profile: get("--profile") ?? DEFAULT_PROFILE,
     connectUrl: get("--connect") ?? null,
     useSteel: argv.includes("--steel"),
     dryRun: argv.includes("--dry-run"),
     screenshot: resolve(get("--out") ?? `harness/results/checkout-${stamp}.png`),
+    viaMcp,
+    amountUsd,
+    taskId: get("--task") ?? `compra-${(buy ?? stamp).replace(/[^a-zA-Z0-9]+/g, "-")}`,
   };
 }
 

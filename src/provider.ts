@@ -17,6 +17,12 @@ export interface ProviderCard {
   fundedCents: Cents;
   currency: string;
   closed: boolean;
+  /**
+   * Últimos cuatro del plástico, si el emisor los da. Es lo único del número que
+   * puede viajar por acá: alcanza para conciliar contra el resumen y no sirve
+   * para cobrar.
+   */
+  last4?: string;
 }
 
 export interface ProviderResult {

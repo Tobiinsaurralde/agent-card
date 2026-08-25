@@ -248,7 +248,10 @@ export class AgentCardService {
       perTransactionCents: policy.perTransactionCents ?? req.budgetCents,
       ttlSeconds: policy.ttlSeconds ?? 24 * 60 * 60,
       singleUse: policy.singleUse,
-      last4: newLast4(),
+      // Si el emisor da los últimos cuatro, son los del plástico de verdad y el
+      // recibo se puede conciliar contra el resumen. El azar es solo el fallback
+      // del mock, donde no hay nada que conciliar.
+      last4: card.providerLast4 ?? newLast4(),
       openedAt,
       card,
       killed: false,
