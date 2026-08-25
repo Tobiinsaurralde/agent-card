@@ -6,8 +6,9 @@ export interface IssueOptions {
   currency: string;
   /**
    * Cap por transacción que el proveedor va a enforcear por su cuenta.
-   * `null` modela el `transactionLimitsType: NA` de Interlace: tarjeta sin
-   * límite propio, gastando contra el balance.
+   * `null` modela una tarjeta sin límite propio, que gasta contra el balance:
+   * es el caso peor, y el que hay que asumir mientras el emisor no ofrezca
+   * límites por tarjeta.
    */
   providerPerTransactionCents?: Cents | null;
 }

@@ -14,8 +14,8 @@ import type { AuthKind, CaptchaEvent, Cents, Decision, DecisionCode } from "./ty
  * El servicio: una sola fuente de verdad para el servidor MCP y el panel.
  *
  * Es provider-agnostic a propósito. El rail entra por `CardProvider` y el
- * checkout por `CheckoutBrowser`, así que cambiar de `MockProvider` a Interlace
- * no toca nada de acá.
+ * checkout por `CheckoutBrowser`, así que cambiar de `MockProvider` al emisor
+ * real no toca nada de acá.
  *
  * Lo que este servicio **no** puede hacer, y conviene tenerlo claro: no está en
  * el camino de la autorización. Con un emisor real, la red le pregunta al emisor,

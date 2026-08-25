@@ -12,8 +12,8 @@
  *
  * 1. `issue()` NO emite nada. Devuelve un id nuevo sobre la MISMA tarjeta
  *    física. Dos handles distintos comparten plástico: cada uno puede respetar
- *    su cap de Konex y entre los dos vaciar la tarjeta real. Con un emisor de
- *    verdad (Interlace) cada handle es una tarjeta aparte y esto desaparece.
+ *    su cap de Konex y entre los dos vaciar la tarjeta real. El día que se pueda
+ *    emitir de verdad, cada handle es una tarjeta aparte y esto desaparece.
  *
  * 2. Los caps los enforcea Konex, no el emisor. Si el agente se saltea el MCP y
  *    usa el número directo, no hay nada que lo frene. Con un emisor real el cap
@@ -132,8 +132,8 @@ export class EnvCardProvider implements CardProvider {
    *
    * El agente recibe URL + token, no el número. Canjea una vez y el servidor se
    * apaga; si no canjea en un minuto, se apaga igual. Es el mismo contrato que
-   * expondría un emisor real, así que el día que entre Interlace el cliente MCP
-   * no cambia.
+   * expondría un emisor real, así que el día que entre el emisor de verdad el
+   * cliente MCP no cambia.
    */
   async credentialGrant(cardId: string): Promise<ProviderCredentialGrant> {
     const card = this.cards.get(cardId);

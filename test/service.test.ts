@@ -41,7 +41,7 @@ test("el presupuesto de la tarjeta no puede superar el saldo disponible", async 
   );
 });
 
-test("el techo por tarjeta se respeta: la beta de Interlace corta en USD 20", async () => {
+test("el techo por tarjeta se respeta: ninguna nace con más de USD 20", async () => {
   const service = svc(100_00);
   await assert.rejects(
     () => card(service, { budgetCents: 25_00 }),

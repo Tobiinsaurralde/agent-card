@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { AgentCardClient, DeniedError } from "../src/mcp/agent-client.js";
 
 /**
@@ -25,9 +28,24 @@ const FAKE_CARD = {
   AGENT_CARD_MAX_CARD_USD: "20",
 };
 
+/**
+ * Cada binario arranca con su propio ledger en un temporal.
+ *
+ * Sin esto los tests comparten el ledger real del usuario: el primero gasta, el
+ * segundo arranca con lo que quedó y falla por un presupuesto que nadie tocó en
+ * el test. Un ledger que persiste es justo lo que queremos en producción y justo
+ * lo que no queremos entre tests.
+ */
 async function spawn(overrides: Record<string, string> = {}): Promise<AgentCardClient> {
+  const state = join(mkdtempSync(join(tmpdir(), "agent-card-test-")), "state.json");
   return AgentCardClient.spawn({
-    env: { ...process.env, ...FAKE_CARD, ...overrides, STEEL_API_KEY: "" },
+    env: {
+      ...process.env,
+      ...FAKE_CARD,
+      AGENT_CARD_STATE: state,
+      ...overrides,
+      STEEL_API_KEY: "",
+    },
   });
 }
 

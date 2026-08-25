@@ -3,6 +3,24 @@
 **Decisión tomada (21 ago 2026):** construir la capa de control sobre un emisor existente, **aceptando
 que es un wrapper**, y competir por UX, defaults y nicho LATAM. No por tecnología.
 
+> **Cambio de proveedor (25 ago 2026).** El emisor es **OmniHood**, por decisión de negocio: el
+> proyecto se hace con ellos. La sección 2 de abajo elige Interlace y queda como está a propósito,
+> porque su razonamiento sigue siendo el correcto y ahora contradice la decisión. Vale tenerlo a la
+> vista en vez de borrarlo.
+>
+> Lo que la decisión deja abierto, y hay que resolver con ellos:
+>
+> - **No tienen API.** La emisión va a ser automatización de su panel. Es la misma técnica que ya usamos
+>   para el checkout, pero se rompe cada vez que ellos cambian el HTML.
+> - **Card-not-present.** `omnihood-analysis.md` §3 dice que su tarjeta no funciona bien online, por
+>   admisión del fundador. Nuestra medición del 25 ago la contradice en parte: la tarjeta llegó a
+>   autorización en un checkout con Stripe y el rechazo fue por saldo, no por BIN. Falta un cargo
+>   aprobado para cerrar la pregunta.
+> - **Economía de la tarjeta por tarea.** Sus docs dicen fee de ~USD 5 por emisión y retiros de una
+>   sola vía. Con tarjetas efímeras eso es un costo fijo por tarea más un resto que no se recupera.
+> - **Fondos comingled.** §5: los depósitos van a una cuenta ómnibus del emisor. Choca de frente con
+>   "tu plata nunca es mía", que es el posicionamiento de la landing.
+
 **Qué es:** un MCP con defaults seguros para que un agente compre online con USDC de Solana, en
 español, pensado para un dev solo y no para un finance team de EE.UU.
 

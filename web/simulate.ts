@@ -50,7 +50,7 @@ export async function openCard(
     provider: new MockProvider(),
     policy,
     fundedCents,
-    // El emisor no impone nada: modela `transactionLimitsType: NA` de Interlace.
+    // El emisor no impone nada por su cuenta: la tarjeta gasta contra el balance.
     providerPerTransactionCents: null,
     now: openedAt,
   });

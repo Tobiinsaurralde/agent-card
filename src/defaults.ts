@@ -2,8 +2,9 @@ import type { CardPolicy, Cents } from "./types.js";
 
 /**
  * La config que escribe todo el mundo primero, y que los proveedores aceptan
- * como válida. Interlace ofrece `transactionLimitsType: NA` —tarjeta sin límite
- * propio— como opción legítima; esto es apenas un paso mejor que eso.
+ * como válida. Hay emisores que ofrecen la tarjeta sin ningún límite propio,
+ * gastando contra el balance, como opción legítima; esto es apenas un paso
+ * mejor que eso.
  *
  * Es el grupo de control del benchmark, no una recomendación.
  */

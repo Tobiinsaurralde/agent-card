@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { SteelBrowser } from "../browser.js";
 import { EnvCardProvider } from "../providers/env-card.js";
@@ -33,7 +35,12 @@ async function main(): Promise<void> {
   // El ledger vive acá entre arranques. Si el archivo está corrupto o es de otra
   // versión, `load()` tira y no arrancamos: seguir sería recargar el presupuesto
   // y perder lo gastado en silencio.
-  const statePath = process.env.AGENT_CARD_STATE?.trim() || ".agent-card/state.json";
+  //
+  // El default es absoluto a propósito. Con un path relativo, arrancar el MCP
+  // desde otra carpeta abre un ledger vacío con el presupuesto entero: sería el
+  // mismo agujero que esto vino a tapar, sólo que con un `cd` en el medio.
+  const statePath =
+    process.env.AGENT_CARD_STATE?.trim() || join(homedir(), ".agent-card", "state.json");
   const store = new FileStore(statePath);
   const saved = store.load();
 

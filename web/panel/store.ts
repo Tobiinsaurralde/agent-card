@@ -10,7 +10,7 @@ import type { CaptchaEvent, Cents, DecisionCode } from "../../src/types.js";
  * Corre sobre el motor real (`safePolicy` + `ControlledCard`), no sobre datos
  * inventados: cada aprobación y cada rechazo salen de `evaluate()`. Lo único
  * simulado es el rail —`MockProvider`— y el browser del checkout. Cuando exista
- * el adaptador de Interlace, se reemplazan esas dos piezas y el panel no cambia.
+ * el adaptador del emisor real, se reemplazan esas dos piezas y el panel no cambia.
  */
 
 export type CardStatus = "activa" | "cerrada" | "kill";
