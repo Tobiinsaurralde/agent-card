@@ -27,12 +27,12 @@ function prefersReducedMotion(): boolean {
 
 function CtaLink({
   href,
-  variant = "primary",
+  variant = "blue",
   children,
   external = false,
 }: {
   href: string;
-  variant?: "primary" | "outline";
+  variant?: "blue" | "ink" | "outline";
   children: ReactNode;
   external?: boolean;
 }) {
@@ -41,12 +41,13 @@ function CtaLink({
       href={href}
       {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
       className={cx(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-medium",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium",
         "transition-[background-color,border-color,color,transform,box-shadow] duration-100 ease-out active:scale-[0.98]",
         focusRing,
-        variant === "primary"
-          ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
-          : "border border-border bg-card/80 text-foreground hover:border-accent/50 hover:bg-accent-soft",
+        variant === "blue" && "shadow-soft bg-accent text-white hover:bg-accent/90",
+        variant === "ink" && "shadow-soft bg-primary text-primary-foreground hover:bg-primary/85",
+        variant === "outline" &&
+          "shadow-soft border border-border bg-card text-foreground hover:border-foreground/25",
       )}
     >
       {children}
@@ -123,7 +124,7 @@ function Waitlist() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={cx(
-            "min-h-11 flex-1 rounded-lg border border-border bg-card px-4 text-sm",
+            "min-h-11 flex-1 rounded-full border border-border bg-background px-5 text-sm",
             "placeholder:text-muted-foreground",
             focusRing,
           )}
@@ -142,8 +143,8 @@ function Waitlist() {
           type="submit"
           disabled={state.kind === "sending"}
           className={cx(
-            "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-medium",
-            "bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90",
+            "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium",
+            "shadow-soft bg-accent text-white transition-colors hover:bg-accent/90",
             "disabled:cursor-not-allowed disabled:opacity-60",
             focusRing,
           )}
@@ -246,7 +247,7 @@ function SectionHeading({
   lead,
 }: {
   eyebrow: string;
-  title: string;
+  title: ReactNode;
   lead?: string;
 }) {
   return (
@@ -254,13 +255,7 @@ function SectionHeading({
       <p className="font-mono text-xs font-semibold tracking-[0.22em] text-gold">
         {eyebrow}
       </p>
-      <h2 className="font-display mt-3 text-3xl font-bold leading-[1.05] md:text-5xl">
-        {title}
-      </h2>
-      <span
-        aria-hidden="true"
-        className="mt-5 block h-1 w-16 rounded-full bg-gradient-to-r from-accent to-gold"
-      />
+      <h2 className="font-display mt-4 text-4xl leading-[1.02] md:text-6xl">{title}</h2>
       {lead !== undefined && (
         <p className="mt-5 max-w-prose text-base leading-relaxed text-muted-foreground md:text-lg">
           {lead}
@@ -271,7 +266,7 @@ function SectionHeading({
 }
 
 const hoverLift =
-  "transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-y-1 hover:shadow-lg";
+  "transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-y-1 hover:shadow-float";
 
 const navLinks = [
   { href: "#problem", label: "The problem" },
@@ -280,35 +275,73 @@ const navLinks = [
   { href: "#principles", label: "Principles" },
 ];
 
+/** La mini terminal del hero: la decisión como objeto, en mono sobre tinta. */
+function HeroTerminal() {
+  return (
+    <div className="shadow-float overflow-hidden rounded-2xl bg-[oklch(0.19_0.022_265)] text-left">
+      <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2.5">
+        <span aria-hidden="true" className="size-2.5 rounded-full bg-[oklch(0.68_0.19_24)]" />
+        <span aria-hidden="true" className="size-2.5 rounded-full bg-[oklch(0.83_0.14_90)]" />
+        <span aria-hidden="true" className="size-2.5 rounded-full bg-[oklch(0.72_0.15_155)]" />
+        <span className="ml-2 font-mono text-[10px] tracking-[0.18em] text-white/40">
+          KONEX · MCP
+        </span>
+      </div>
+      <div className="num space-y-1.5 px-4 py-3.5 text-xs leading-relaxed">
+        <p className="text-white/80">
+          <span className="text-white/35">&gt;</span> charge api-credits USD 9.00
+        </p>
+        <p className="text-[oklch(0.8_0.15_155)]">✓ APPROVED · receipt #01</p>
+        <p className="text-white/80">
+          <span className="text-white/35">&gt;</span> charge api-credits USD 9.00
+        </p>
+        <p className="text-[oklch(0.74_0.17_24)]">
+          ✗ DENY · LIFETIME_EXCEEDED — cap USD 10.00
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** La tarjetita de specs que flota al lado de la tarjeta, estilo ficha técnica. */
+function SpecCard() {
+  return (
+    <div className="shadow-float rounded-2xl border border-border bg-card p-4">
+      <p className="font-display text-lg leading-none">Issue a card</p>
+      <dl className="mt-3 space-y-2">
+        {[
+          { k: "Cap", v: "USD 10.00" },
+          { k: "Expires", v: "24 h" },
+          { k: "Merchant", v: "1 · allowlist" },
+          { k: "On deny", v: "says why" },
+        ].map((row) => (
+          <div key={row.k} className="flex items-baseline justify-between gap-4">
+            <dt className="text-xs text-muted-foreground">{row.k}</dt>
+            <dd className="num text-xs font-semibold">{row.v}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
 export function Landing() {
   return (
-    <div className="landing min-h-screen">
-      <div aria-hidden="true" className="landing-grain" />
+    <div className="min-h-screen overflow-x-clip">
       <a
         href="#content"
         className={cx(
-          "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground",
+          "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground",
         )}
       >
         Skip to content
       </a>
 
-      <div aria-hidden="true" className="brand-bar h-1.5 w-full" />
-
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-6">
-          <a
-            href="index.html"
-            className={cx("flex items-center gap-2.5 rounded-lg", focusRing)}
-          >
-            <img
-              src="logo-light.png"
-              alt=""
-              className="size-9 rounded-lg border border-border shadow-sm"
-            />
-            <span className="font-display text-base font-bold tracking-tight">
-              Konex
-            </span>
+      <header className="sticky top-3 z-40 px-3 md:top-4">
+        <nav className="shadow-soft mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-full border border-border bg-card/95 py-2 pl-3 pr-2 backdrop-blur-md">
+          <a href="index.html" className={cx("flex items-center gap-2.5 rounded-full", focusRing)}>
+            <img src="logo-light.png" alt="" className="size-8 rounded-full border border-border" />
+            <span className="font-display text-xl leading-none">Konex</span>
           </a>
           <div className="hidden items-center gap-1 md:flex">
             {navLinks.map((link) => (
@@ -316,7 +349,7 @@ export function Landing() {
                 key={link.href}
                 href={link.href}
                 className={cx(
-                  "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-[color,background-color] duration-100 ease-out hover:bg-accent-soft hover:text-accent",
+                  "rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-[color,background-color] duration-100 ease-out hover:bg-muted hover:text-foreground",
                   focusRing,
                 )}
               >
@@ -328,13 +361,13 @@ export function Landing() {
             <a
               href="panel.html"
               className={cx(
-                "hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-[color,background-color] duration-100 ease-out hover:bg-accent-soft hover:text-accent sm:inline-flex",
+                "hidden rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-[color,background-color] duration-100 ease-out hover:bg-muted hover:text-foreground sm:inline-flex",
                 focusRing,
               )}
             >
               Dashboard
             </a>
-            <CtaLink href="simulador.html">
+            <CtaLink href="simulador.html" variant="ink">
               Try the simulator
               <ArrowRight className="size-4" aria-hidden="true" />
             </CtaLink>
@@ -343,54 +376,48 @@ export function Landing() {
       </header>
 
       <main id="content">
-        <section className="relative overflow-hidden">
-          <div aria-hidden="true" className="orb orb-blue animate-orb -right-16 -top-20 size-[28rem]" />
-          <div
-            aria-hidden="true"
-            className="orb orb-gold animate-orb-delayed -bottom-24 -left-16 size-[22rem]"
-          />
-          <p
-            aria-hidden="true"
-            className="watermark pointer-events-none absolute -right-6 top-8 text-[11rem] font-extrabold text-gold/25 md:right-8 md:text-[16rem]"
-          >
-            NO
-          </p>
-          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 md:px-6 md:py-24 lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="relative">
+          <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pb-16 pt-14 md:px-6 md:pb-24 md:pt-20 lg:grid-cols-[1.05fr_0.95fr]">
             <div>
               <div className="animate-fade-up">
-                <Chip tone="accent" dot={false}>
-                  LIFETIME CAP · TTL · ALLOWLIST · SPANISH-FIRST
-                </Chip>
+                <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 font-mono text-[11px] font-semibold tracking-[0.18em] text-muted-foreground">
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-gold" />
+                  ONE CARD · ONE TASK · ONE CAP
+                </span>
               </div>
               <h1
-                className="font-display animate-fade-up mt-6 text-5xl font-extrabold leading-[0.95] md:text-7xl"
+                className="font-display animate-fade-up mt-6 text-6xl leading-[0.98] md:text-[5.4rem]"
                 style={{ animationDelay: "60ms" }}
               >
                 The card that
                 <br />
-                knows how to say{" "}
-                <span className="text-gradient-brand">no.</span>
+                knows how to
+                <br />
+                say <span className="display-accent">no.</span>
               </h1>
               <p
-                className="animate-fade-up mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl"
+                className="animate-fade-up mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground"
                 style={{ animationDelay: "120ms" }}
               >
-                Virtual cards with safe defaults for AI agents that shop on
-                their own. You set the budget, the merchant and the lifespan.
-                The agent buys. Everything else gets declined — with the exact
-                reason on the receipt.
+                Virtual cards with safe defaults for AI agents that shop on their
+                own. You set the budget, the merchant and the lifespan. The agent
+                buys. Everything else gets declined — with the exact reason on
+                the receipt.
               </p>
               <div
                 className="animate-fade-up mt-8 flex flex-wrap items-center gap-3"
                 style={{ animationDelay: "180ms" }}
               >
                 <CtaLink href="simulador.html">
-                  <Play className="size-4" aria-hidden="true" />
                   Try the simulator
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </CtaLink>
+                <CtaLink href="panel.html" variant="outline">
+                  See the panel
                 </CtaLink>
               </div>
               <p
-                className="animate-fade-up mt-5 flex items-center gap-2 text-xs text-muted-foreground"
+                className="animate-fade-up mt-6 flex max-w-xl items-center gap-2 text-xs text-muted-foreground"
                 style={{ animationDelay: "240ms" }}
               >
                 <FlaskConical className="size-3.5 shrink-0" aria-hidden="true" />
@@ -403,85 +430,67 @@ export function Landing() {
               className="animate-fade-up relative mx-auto w-full max-w-md"
               style={{ animationDelay: "200ms" }}
             >
-              <TiltCard>
-                <VirtualCard
-                  issued
-                  last4="4021"
-                  status="activa"
-                  ttlLabel="24 H"
-                  presetLabel="SAFE"
-                  className="card-glow"
-                />
-              </TiltCard>
-              <div className="animate-float relative z-10 -mt-8 ml-auto w-[90%] rounded-2xl border-2 border-gold/40 bg-card p-5 shadow-xl">
-                <p className="mb-3 font-mono text-[11px] font-semibold tracking-[0.18em] text-gold">
-                  LEDGER · TASK-DEMO
-                </p>
-                <div className="space-y-3">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">api-credits</p>
-                      <p className="num text-xs text-muted-foreground">
-                        #01 · capture · day 0
-                      </p>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="num text-sm font-semibold">USD 9.00</span>
-                      <Chip tone="success">APPROVED</Chip>
-                    </div>
-                  </div>
-                  <div className="border-t border-border pt-3">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold">api-credits</p>
-                        <p className="num text-xs text-muted-foreground">
-                          #02 · capture · day 0
-                        </p>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="num text-sm font-semibold text-muted-foreground line-through">
-                          USD 9.00
-                        </span>
-                        <Chip tone="destructive">DECLINED</Chip>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                      <span className="num font-semibold text-destructive">
-                        LIFETIME_EXCEEDED
-                      </span>{" "}
-                      — USD 18.00 accumulated would exceed the USD 10.00 cap.
-                    </p>
-                  </div>
-                </div>
+              {/* La línea punteada que une la política con la decisión. */}
+              <div
+                aria-hidden="true"
+                className="absolute left-[30%] top-[30%] hidden h-[55%] border-l-2 border-dashed border-foreground/15 sm:block"
+              />
+              <div className="relative rotate-[3deg]">
+                <TiltCard>
+                  <VirtualCard
+                    issued
+                    last4="4021"
+                    status="activa"
+                    ttlLabel="24 H"
+                    presetLabel="SAFE"
+                    className="shadow-float"
+                  />
+                </TiltCard>
+              </div>
+              <div className="animate-float relative z-10 -mt-9 ml-auto w-[62%] -rotate-2 sm:-mr-6">
+                <SpecCard />
+              </div>
+              <div className="animate-float-slow relative z-10 mt-4 w-[88%] rotate-1">
+                <HeroTerminal />
               </div>
             </div>
           </div>
 
-          <div className="relative border-y border-border bg-primary text-primary-foreground">
-            <dl className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:grid-cols-3 md:px-6">
+          <div className="mx-auto max-w-6xl px-4 pb-16 md:px-6 md:pb-20">
+            <p className="font-mono text-[11px] font-semibold tracking-[0.22em] text-muted-foreground">
+              SAFE DEFAULTS · ALWAYS ON
+            </p>
+            <ul className="mt-4 flex flex-wrap gap-2">
               {[
-                { k: "Lifetime cap", v: "USD 10.00" },
-                { k: "Time to live", v: "24 hours" },
-                { k: "Merchants allowed", v: "1 · allowlist" },
-              ].map((stat) => (
-                <div key={stat.k} className="flex flex-col gap-1">
-                  <dt className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-foreground/70">
-                    {stat.k}
-                  </dt>
-                  <dd className="font-display text-2xl font-bold">{stat.v}</dd>
-                </div>
+                "Lifetime cap",
+                "TTL with auto-close",
+                "Merchant allowlist",
+                "Kill switch",
+                "Receipt per charge",
+                "Spanish-first",
+              ].map((label) => (
+                <li
+                  key={label}
+                  className="shadow-soft rounded-full border border-border bg-card px-4 py-2 text-sm font-medium"
+                >
+                  {label}
+                </li>
               ))}
-            </dl>
+            </ul>
           </div>
         </section>
 
-        <section id="problem" className="field-navy relative overflow-hidden">
-          <div aria-hidden="true" className="orb orb-gold -right-24 top-10 size-80 opacity-40" />
-          <div className="relative mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+        <section id="problem" className="relative">
+          <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
             <Reveal>
               <SectionHeading
                 eyebrow="THE PROBLEM"
-                title="An agent with your card is an employee with the cash drawer open."
+                title={
+                  <>
+                    An agent with your card is an employee with the cash drawer{" "}
+                    <span className="display-accent">open.</span>
+                  </>
+                }
                 lead="Card providers sell you primitives: per-transaction limits, MCC, velocity. They don't tell you what to set. 90% of the risk lives in the configuration — and these are the three holes the typical config leaves open."
               />
             </Reveal>
@@ -512,24 +521,24 @@ export function Landing() {
                 <Reveal key={item.title} delayMs={index * 80}>
                   <article
                     className={cx(
-                      "relative h-full overflow-hidden rounded-2xl border border-border bg-card p-6",
+                      "shadow-soft relative h-full overflow-hidden rounded-3xl border border-border bg-card p-6",
                       hoverLift,
                     )}
                   >
                     <span
                       aria-hidden="true"
-                      className="font-display absolute -right-2 -top-3 text-7xl font-extrabold text-gold/20"
+                      className="font-display absolute -right-1 -top-4 text-8xl italic text-gold/25"
                     >
                       {item.n}
                     </span>
-                    <span className="flex size-10 items-center justify-center rounded-xl bg-destructive-soft text-destructive">
+                    <span className="flex size-10 items-center justify-center rounded-full bg-destructive-soft text-destructive">
                       <item.icon className="size-5" aria-hidden="true" />
                     </span>
-                    <h3 className="font-display mt-5 text-xl font-bold">{item.title}</h3>
+                    <h3 className="font-display mt-5 text-2xl">{item.title}</h3>
                     <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                       {item.body}
                     </p>
-                    <p className="num mt-5 rounded-lg bg-destructive-soft px-3 py-2 text-xs font-medium text-destructive">
+                    <p className="num mt-5 rounded-xl bg-destructive-soft px-3 py-2 text-xs font-medium text-destructive">
                       {item.code}
                     </p>
                   </article>
@@ -539,13 +548,17 @@ export function Landing() {
           </div>
         </section>
 
-        <section id="defaults" className="field-gold relative overflow-hidden">
-          <div aria-hidden="true" className="orb orb-blue -left-16 bottom-0 size-72 opacity-50" />
-          <div className="relative mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+        <section id="defaults" className="relative">
+          <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
             <Reveal>
               <SectionHeading
                 eyebrow="THE PRODUCT"
-                title="Defaults that are not negotiable."
+                title={
+                  <>
+                    Defaults that are{" "}
+                    <span className="display-accent">not negotiable.</span>
+                  </>
+                }
                 lead="We don't sell the primitive: we sell the opinion. These rules ship from the factory and can't be turned off, because each one plugs a real hole."
               />
             </Reveal>
@@ -591,13 +604,13 @@ export function Landing() {
                 <Reveal key={item.title} delayMs={(index % 3) * 70} className={item.span}>
                   <article
                     className={cx(
-                      "flex h-full flex-col rounded-2xl border border-border bg-card p-6",
+                      "shadow-soft flex h-full flex-col rounded-3xl border border-border bg-card p-6",
                       hoverLift,
                     )}
                   >
                     <span
                       className={cx(
-                        "flex size-11 items-center justify-center rounded-xl",
+                        "flex size-11 items-center justify-center rounded-full",
                         index % 2 === 0
                           ? "bg-accent-soft text-accent"
                           : "bg-gold-soft text-gold",
@@ -605,7 +618,7 @@ export function Landing() {
                     >
                       <item.icon className="size-5" aria-hidden="true" />
                     </span>
-                    <h3 className="font-display mt-5 text-xl font-bold">{item.title}</h3>
+                    <h3 className="font-display mt-5 text-2xl">{item.title}</h3>
                     <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
                       {item.body}
                     </p>
@@ -616,18 +629,23 @@ export function Landing() {
           </div>
         </section>
 
-        <section id="how-it-works" className="field-ice relative overflow-hidden">
-          <div className="relative mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+        <section id="how-it-works" className="relative">
+          <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
             <Reveal>
               <SectionHeading
                 eyebrow="HOW IT WORKS"
-                title="Three steps, and the policy always decides before the rail."
+                title={
+                  <>
+                    Three steps, and the policy always decides{" "}
+                    <span className="display-accent">before the rail.</span>
+                  </>
+                }
               />
             </Reveal>
             <ol className="relative mt-14 grid gap-6 md:grid-cols-3">
               <span
                 aria-hidden="true"
-                className="absolute top-10 right-[16%] left-[16%] hidden h-1 rounded-full bg-gradient-to-r from-accent via-gold to-accent md:block"
+                className="absolute left-[16%] right-[16%] top-10 hidden border-t-2 border-dashed border-foreground/15 md:block"
               />
               {[
                 {
@@ -652,18 +670,18 @@ export function Landing() {
                 <Reveal key={step.n} delayMs={index * 80} className="h-full">
                   <li
                     className={cx(
-                      "relative flex h-full flex-col rounded-2xl border border-border bg-card p-6",
+                      "shadow-soft relative flex h-full flex-col rounded-3xl border border-border bg-card p-6",
                       hoverLift,
                     )}
                   >
-                    <span className="font-display text-gradient-brand relative z-10 text-5xl font-extrabold">
+                    <span className="font-display relative z-10 text-5xl italic text-accent">
                       {step.n}
                     </span>
-                    <h3 className="font-display mt-5 text-xl font-bold">{step.title}</h3>
+                    <h3 className="font-display mt-5 text-2xl">{step.title}</h3>
                     <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
                       {step.body}
                     </p>
-                    <p className="num mt-5 break-words rounded-lg bg-muted px-3 py-2.5 text-xs text-muted-foreground">
+                    <p className="num mt-5 break-words rounded-xl bg-muted px-3 py-2.5 text-xs text-muted-foreground">
                       {step.code}
                     </p>
                   </li>
@@ -673,13 +691,20 @@ export function Landing() {
           </div>
         </section>
 
-        <section id="principles" className="field-navy relative overflow-hidden">
-          <div aria-hidden="true" className="orb orb-blue -left-20 bottom-10 size-96 opacity-30" />
-          <div className="relative mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+        <section id="principles" className="relative">
+          <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
             <Reveal>
-              <SectionHeading eyebrow="PRINCIPLES" title="Three rules we don't negotiate." />
+              <SectionHeading
+                eyebrow="PRINCIPLES"
+                title={
+                  <>
+                    Three rules we{" "}
+                    <span className="display-accent">don't negotiate.</span>
+                  </>
+                }
+              />
             </Reveal>
-            <div className="mt-14 space-y-6">
+            <div className="mt-14 space-y-5">
               {[
                 {
                   n: "01",
@@ -701,18 +726,16 @@ export function Landing() {
                 },
               ].map((rule, index) => (
                 <Reveal key={rule.title} delayMs={index * 70}>
-                  <div className="grid items-start gap-6 rounded-2xl border border-border bg-card p-6 md:grid-cols-[auto_1fr] md:p-8">
-                    <span className="font-display text-6xl font-extrabold leading-none text-gold/40 md:text-7xl">
+                  <div className="shadow-soft grid items-start gap-6 rounded-3xl border border-border bg-card p-6 md:grid-cols-[auto_1fr] md:p-8">
+                    <span className="font-display text-6xl italic leading-none text-gold/40 md:text-7xl">
                       {rule.n}
                     </span>
                     <div className="flex gap-4">
-                      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-gold-soft text-gold">
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold">
                         <rule.icon className="size-5" aria-hidden="true" />
                       </span>
                       <div>
-                        <h3 className="font-display text-2xl font-bold md:text-3xl">
-                          {rule.title}
-                        </h3>
+                        <h3 className="font-display text-3xl md:text-4xl">{rule.title}</h3>
                         <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
                           {rule.body}
                         </p>
@@ -725,17 +748,17 @@ export function Landing() {
           </div>
         </section>
 
-        <section className="field-gold relative overflow-hidden">
-          <div aria-hidden="true" className="orb orb-blue right-0 -top-10 size-80 opacity-40" />
-          <div className="relative mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
+        <section className="relative">
+          <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
             <Reveal>
-              <div className="relative overflow-hidden rounded-3xl border-2 border-primary/20 bg-card p-8 shadow-xl md:p-12">
+              <div className="shadow-float relative overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-12">
                 <Chip tone="warning" dot={false}>
                   <FlaskConical className="size-3" aria-hidden="true" />
                   WHERE WE ARE, NO SMOKE
                 </Chip>
-                <h2 className="font-display mt-5 text-3xl font-bold leading-tight md:text-5xl">
-                  Today: a policy engine tested against a simulated issuer.
+                <h2 className="font-display mt-5 text-4xl leading-[1.02] md:text-6xl">
+                  Today: a policy engine tested against a{" "}
+                  <span className="display-accent">simulated</span> issuer.
                 </h2>
                 <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
                   The engine has tests and a harness that runs the attacks on
@@ -758,15 +781,11 @@ export function Landing() {
         </section>
       </main>
 
-      <footer className="field-navy">
+      <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 md:flex-row md:items-center md:justify-between md:px-6">
           <div className="flex items-center gap-3">
-            <img
-              src="logo-light.png"
-              alt=""
-              className="size-9 rounded-lg border border-border"
-            />
-            <span className="font-display text-base font-bold">Konex</span>
+            <img src="logo-light.png" alt="" className="size-9 rounded-full border border-border" />
+            <span className="font-display text-xl">Konex</span>
           </div>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
             A control layer, not an issuer. The BIN, the bank and the KYC are
@@ -774,12 +793,14 @@ export function Landing() {
           </p>
           <a
             href="simulador.html"
-            className={cx("rounded-sm text-sm font-medium text-gold underline-offset-4 hover:underline", focusRing)}
+            className={cx(
+              "rounded-sm text-sm font-medium text-accent underline-offset-4 hover:underline",
+              focusRing,
+            )}
           >
             Simulator
           </a>
         </div>
-        <div aria-hidden="true" className="brand-bar h-1.5 w-full" />
       </footer>
     </div>
   );

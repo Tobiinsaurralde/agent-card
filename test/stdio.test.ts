@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -19,6 +22,9 @@ test("el binario hace handshake por stdio con stdout limpio", async () => {
       ...process.env,
       AGENT_CARD_AGENT_ID: "stdio-test",
       AGENT_CARD_BUDGET_USD: "50",
+      // Ledger propio y descartable: sin esto el binario levanta el estado
+      // real de ~/.agent-card y el presupuesto del test depende de la máquina.
+      AGENT_CARD_STATE: join(mkdtempSync(join(tmpdir(), "agent-card-stdio-")), "state.json"),
     },
     stderr: "pipe",
   });

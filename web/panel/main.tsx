@@ -3,9 +3,8 @@ import { createRoot } from "react-dom/client";
 import { PanelApp } from "./Panel.js";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
-import "@fontsource/syne/600.css";
-import "@fontsource/syne/700.css";
-import "@fontsource/syne/800.css";
+import "@fontsource/instrument-serif";
+import "@fontsource/instrument-serif/400-italic.css";
 import "../styles.css";
 
 const container = document.getElementById("root");

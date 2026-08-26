@@ -76,39 +76,25 @@ export function PanelApp() {
   }
 
   return (
-    <div className="landing relative min-h-screen overflow-x-hidden">
-      <div aria-hidden="true" className="landing-grain" />
-      <div
-        aria-hidden="true"
-        className="orb orb-blue animate-orb -right-24 -top-20 size-[24rem]"
-      />
-      <div
-        aria-hidden="true"
-        className="orb orb-gold animate-orb-delayed -left-20 top-[40rem] size-[18rem]"
-      />
-
+    <div className="relative min-h-screen overflow-x-clip">
       <p role="status" aria-live="polite" className="sr-only">
         {live}
       </p>
 
-      <div aria-hidden="true" className="brand-bar h-1.5 w-full" />
-
-      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+      <header className="sticky top-3 z-40 px-3 md:top-4">
+        <div className="shadow-soft mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-border bg-card/95 py-2 pl-3 pr-2 backdrop-blur-md">
           <div className="flex min-w-0 items-center gap-2.5">
             <a
               href="index.html"
               aria-label="Volver a la página principal"
-              className={cx("flex items-center gap-2.5 rounded-lg", focusRing)}
+              className={cx("flex items-center gap-2.5 rounded-full", focusRing)}
             >
               <img
                 src="logo-light.png"
                 alt=""
-                className="size-9 shrink-0 rounded-lg border border-border shadow-sm"
+                className="size-8 shrink-0 rounded-full border border-border"
               />
-              <span className="font-display text-base font-bold tracking-tight">
-                Konex
-              </span>
+              <span className="font-display text-xl leading-none">Konex</span>
             </a>
             <Chip tone="warning" dot={false}>
               <FlaskConical className="size-3" aria-hidden="true" />
@@ -120,7 +106,7 @@ export function PanelApp() {
             <a
               href="simulador.html"
               className={cx(
-                "hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-flex",
+                "hidden rounded-full px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-flex",
                 focusRing,
               )}
             >
@@ -129,9 +115,9 @@ export function PanelApp() {
             <button
               type="button"
               onClick={toggle}
-              aria-label={dark ? "Cambiar a pergamino" : "Cambiar a navy"}
+              aria-label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
               className={cx(
-                "inline-flex size-10 cursor-pointer items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground",
+                "inline-flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground",
                 focusRing,
               )}
             >
@@ -150,13 +136,9 @@ export function PanelApp() {
           <p className="font-mono text-xs font-semibold tracking-[0.22em] text-gold">
             PANEL DE CONTROL
           </p>
-          <h1 className="font-display mt-3 text-3xl font-extrabold leading-[1.05] md:text-4xl">
-            Tus agentes y <span className="text-gradient-brand">su plata.</span>
+          <h1 className="font-display mt-3 text-4xl leading-[1.02] md:text-5xl">
+            Tus agentes y <span className="display-accent">su plata.</span>
           </h1>
-          <span
-            aria-hidden="true"
-            className="mt-4 block h-1 w-16 rounded-full bg-gradient-to-r from-accent to-gold"
-          />
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             Emitís tarjetas con topes obligatorios, mirás cada cobro con su motivo y
             cortás todo con un botón. El emisor es un mock local: las decisiones son
@@ -215,8 +197,6 @@ export function PanelApp() {
           </p>
         </footer>
       </main>
-
-      <div aria-hidden="true" className="brand-bar h-1.5 w-full" />
     </div>
   );
 }
@@ -238,13 +218,11 @@ function TreasuryStrip({
   const cents = usdToCents(amount);
 
   return (
-    <section className="field-navy mt-8 overflow-hidden rounded-2xl border border-border">
+    <section className="shadow-soft mt-8 overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
         <div className="flex items-center gap-2">
           <Wallet className="size-4 text-gold" aria-hidden="true" />
-          <h2 className="font-display text-sm font-bold tracking-tight">
-            Presupuesto · simulado
-          </h2>
+          <h2 className="font-display text-lg">Presupuesto · simulado</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label htmlFor="deposit" className="sr-only">

@@ -322,37 +322,26 @@ export function App() {
   ];
 
   return (
-    <div className="landing relative min-h-screen overflow-x-hidden">
-      <div aria-hidden="true" className="landing-grain" />
-      <div aria-hidden="true" className="orb orb-blue animate-orb -right-20 -top-16 size-[22rem]" />
-      <div
-        aria-hidden="true"
-        className="orb orb-gold animate-orb-delayed -bottom-32 -left-16 size-[18rem]"
-      />
-
+    <div className="relative min-h-screen overflow-x-clip">
       {/* Los lectores de pantalla anuncian cada decisión sin mover el foco. */}
       <p role="status" aria-live="polite" className="sr-only">
         {liveMessage}
       </p>
 
-      <div aria-hidden="true" className="brand-bar h-1.5 w-full" />
-
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+      <header className="sticky top-3 z-40 px-3 md:top-4">
+        <div className="shadow-soft mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-border bg-card/95 py-2 pl-3 pr-2 backdrop-blur-md">
           <div className="flex min-w-0 items-center gap-2.5">
             <a
               href="index.html"
               aria-label="Volver a la página principal"
-              className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="flex items-center gap-2.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <img
                 src="logo-light.png"
                 alt=""
-                className="size-9 shrink-0 rounded-lg border border-border shadow-sm"
+                className="size-8 shrink-0 rounded-full border border-border"
               />
-              <span className="font-display text-base font-bold tracking-tight">
-                Konex
-              </span>
+              <span className="font-display text-xl leading-none">Konex</span>
             </a>
             <Chip tone="warning" dot={false}>
               <FlaskConical className="size-3" aria-hidden="true" />
@@ -363,15 +352,15 @@ export function App() {
           <div className="flex shrink-0 items-center gap-1.5">
             <a
               href="panel.html"
-              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:inline-flex"
+              className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:inline-flex"
             >
               Panel
             </a>
             <button
               type="button"
               onClick={toggle}
-              aria-label={dark ? "Cambiar a pergamino" : "Cambiar a navy"}
-              className="inline-flex size-10 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              aria-label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+              className="inline-flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-[background-color,color] duration-100 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {dark ? (
                 <Sun className="size-4" aria-hidden="true" />
@@ -388,14 +377,10 @@ export function App() {
           <p className="font-mono text-xs font-semibold tracking-[0.22em] text-gold">
             POLICY SIMULATOR
           </p>
-          <h1 className="font-display mt-3 text-3xl font-extrabold leading-[1.05] text-foreground md:text-5xl">
+          <h1 className="font-display mt-3 text-4xl leading-[1.02] text-foreground md:text-5xl">
             La tarjeta que sabe decir que{" "}
-            <span className="text-gradient-brand">no.</span>
+            <span className="display-accent">no.</span>
           </h1>
-          <span
-            aria-hidden="true"
-            className="mt-4 block h-1 w-16 rounded-full bg-gradient-to-r from-accent to-gold"
-          />
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
             Defaults seguros para agentes de IA que compran solos. Configurá la
             política, intentá cobros y mirá exactamente qué se rechaza y por qué.
@@ -427,7 +412,7 @@ export function App() {
               status={cardStatus}
               ttlLabel={ttlLabel}
               presetLabel={issuedPreset === "safe" ? "SAFE" : "PERMISSIVE"}
-              className="card-glow"
+              className="shadow-float"
             />
 
             {card !== null && (
@@ -671,7 +656,7 @@ export function App() {
           {/* ─── Columna principal: actividad ─── */}
           <div className="space-y-5">
             {card !== null && (
-              <dl className="grid grid-cols-2 divide-x-0 divide-y divide-border overflow-hidden rounded-2xl bg-primary text-primary-foreground sm:grid-cols-4 sm:divide-x sm:divide-y-0">
+              <dl className="shadow-soft grid grid-cols-2 divide-x-0 divide-y divide-primary-foreground/10 overflow-hidden rounded-2xl bg-primary text-primary-foreground sm:grid-cols-4 sm:divide-x sm:divide-y-0">
                 <StatCell label="Intentos" value={String(rows.length)} />
                 <StatCell label="Aprobados" value={String(approvedCount)} tone="success" />
                 <StatCell label="Rechazados" value={String(rejectedCount)} tone="destructive" />
@@ -879,7 +864,6 @@ export function App() {
           </p>
         </footer>
       </main>
-      <div aria-hidden="true" className="brand-bar h-1.5 w-full" />
     </div>
   );
 }
