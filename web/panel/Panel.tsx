@@ -243,7 +243,7 @@ function TreasuryStrip({
         <div className="flex items-center gap-2">
           <Wallet className="size-4 text-gold" aria-hidden="true" />
           <h2 className="font-display text-sm font-bold tracking-tight">
-            Wallet · USDC en Solana
+            Presupuesto · simulado
           </h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">

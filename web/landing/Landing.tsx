@@ -359,7 +359,7 @@ export function Landing() {
             <div>
               <div className="animate-fade-up">
                 <Chip tone="accent" dot={false}>
-                  USDC ON SOLANA · NON-CUSTODIAL · SPANISH-FIRST
+                  LIFETIME CAP · TTL · ALLOWLIST · SPANISH-FIRST
                 </Chip>
               </div>
               <h1
@@ -633,7 +633,7 @@ export function Landing() {
                 {
                   n: "01",
                   title: "You define the policy",
-                  body: "Total budget, allowed merchant, lifespan. Fund it with USDC on Solana: the funds stay in your wallet, not in ours.",
+                  body: "Total budget, allowed merchant, lifespan. The cap is mandatory: a card without a ceiling can't be created.",
                   code: 'request_card { amount: 10, merchant: "api-credits", ttl: "24h" }',
                 },
                 {
@@ -677,15 +677,15 @@ export function Landing() {
           <div aria-hidden="true" className="orb orb-blue -left-20 bottom-10 size-96 opacity-30" />
           <div className="relative mx-auto max-w-6xl px-4 py-20 md:px-6 md:py-28">
             <Reveal>
-              <SectionHeading eyebrow="PRINCIPLES" title="Three rules that don't break." />
+              <SectionHeading eyebrow="PRINCIPLES" title="Three rules we don't negotiate." />
             </Reveal>
             <div className="mt-14 space-y-6">
               {[
                 {
                   n: "01",
                   icon: Wallet,
-                  title: "Your money is never mine.",
-                  body: "No pool, no aggregated balance, no one-way withdrawals. Funds stay in your wallet; the limit is an on-chain allowance you can revoke whenever you want.",
+                  title: "Your money should never be mine.",
+                  body: "Where this is going: funds that stay in your wallet under an allowance you can revoke. That part is not built. Today the balance sits with the card issuer, like every card program does — and we'd rather you read it here than find out later.",
                 },
                 {
                   n: "02",
