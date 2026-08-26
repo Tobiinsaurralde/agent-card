@@ -61,7 +61,7 @@ export function VirtualCard({
         )}
       >
         <div className="flex items-start justify-between gap-1.5">
-          <span className="font-display truncate text-base italic leading-none">
+          <span className="font-display truncate text-sm leading-none tracking-tight">
             Konex
           </span>
           <span className="shrink-0 whitespace-nowrap rounded-full border border-white/25 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider text-white/80">

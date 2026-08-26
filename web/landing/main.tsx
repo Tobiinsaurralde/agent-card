@@ -3,8 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Landing } from "./Landing.js";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
-import "@fontsource/instrument-serif";
-import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource-variable/bricolage-grotesque";
 import "../styles.css";
 
 const container = document.getElementById("root");

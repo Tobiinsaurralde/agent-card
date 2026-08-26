@@ -81,20 +81,20 @@ export function PanelApp() {
         {live}
       </p>
 
-      <header className="sticky top-3 z-40 px-3 md:top-4">
-        <div className="shadow-soft mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-border bg-card/95 py-2 pl-3 pr-2 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-foreground/15 bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 md:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
             <a
               href="index.html"
               aria-label="Volver a la página principal"
-              className={cx("flex items-center gap-2.5 rounded-full", focusRing)}
+              className={cx("flex items-center gap-2.5 rounded-md", focusRing)}
             >
               <img
                 src="logo-light.png"
                 alt=""
-                className="size-8 shrink-0 rounded-full border border-border"
+                className="size-8 shrink-0 rounded-md border border-border"
               />
-              <span className="font-display text-xl leading-none">Konex</span>
+              <span className="font-display text-lg leading-none">Konex</span>
             </a>
             <Chip tone="warning" dot={false}>
               <FlaskConical className="size-3" aria-hidden="true" />
@@ -102,22 +102,22 @@ export function PanelApp() {
               <span className="sm:hidden">DEMO</span>
             </Chip>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-3">
             <a
               href="simulador.html"
               className={cx(
-                "hidden rounded-full px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground sm:inline-flex",
+                "hidden rounded-sm font-mono text-[11px] font-semibold tracking-[0.18em] text-muted-foreground hover:text-accent sm:inline-flex",
                 focusRing,
               )}
             >
-              Simulador
+              SIMULADOR
             </a>
             <button
               type="button"
               onClick={toggle}
               aria-label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
               className={cx(
-                "inline-flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground",
+                "inline-flex size-9 cursor-pointer items-center justify-center rounded-md border border-transparent text-muted-foreground hover:border-border hover:text-foreground",
                 focusRing,
               )}
             >

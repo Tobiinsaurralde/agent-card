@@ -1,11 +1,6 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-  type ReactNode,
-} from "react";
-import {
+  ArrowDown,
   ArrowRight,
   Ban,
   Clock,
@@ -41,13 +36,13 @@ function CtaLink({
       href={href}
       {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
       className={cx(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium",
-        "transition-[background-color,border-color,color,transform,box-shadow] duration-100 ease-out active:scale-[0.98]",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold",
+        "transition-[background-color,border-color,color,transform,box-shadow] duration-100 ease-out active:translate-x-px active:translate-y-px active:shadow-none",
         focusRing,
         variant === "blue" && "shadow-soft bg-accent text-white hover:bg-accent/90",
         variant === "ink" && "shadow-soft bg-primary text-primary-foreground hover:bg-primary/85",
         variant === "outline" &&
-          "shadow-soft border border-border bg-card text-foreground hover:border-foreground/25",
+          "shadow-soft border border-foreground/20 bg-card text-foreground hover:border-foreground/45",
       )}
     >
       {children}
@@ -124,7 +119,7 @@ function Waitlist() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={cx(
-            "min-h-11 flex-1 rounded-full border border-border bg-background px-5 text-sm",
+            "min-h-11 flex-1 rounded-lg border border-foreground/20 bg-background px-4 text-sm",
             "placeholder:text-muted-foreground",
             focusRing,
           )}
@@ -143,7 +138,7 @@ function Waitlist() {
           type="submit"
           disabled={state.kind === "sending"}
           className={cx(
-            "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium",
+            "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold",
             "shadow-soft bg-accent text-white transition-colors hover:bg-accent/90",
             "disabled:cursor-not-allowed disabled:opacity-60",
             focusRing,
@@ -196,8 +191,8 @@ function Reveal({
       ref={ref}
       style={delayMs > 0 ? { transitionDelay: `${delayMs}ms` } : undefined}
       className={cx(
-        "transition-[opacity,transform] duration-300 ease-out",
-        shown ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+        "transition-[opacity,transform,filter] duration-500 ease-out",
+        shown ? "translate-y-0 opacity-100 blur-none" : "translate-y-5 opacity-0 blur-sm",
         className,
       )}
     >
@@ -206,38 +201,12 @@ function Reveal({
   );
 }
 
-function TiltCard({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const frame = useRef(0);
-
-  function handleMove(event: ReactPointerEvent<HTMLDivElement>) {
-    const el = ref.current;
-    if (el === null || prefersReducedMotion()) return;
-    const rect = el.getBoundingClientRect();
-    const px = (event.clientX - rect.left) / rect.width - 0.5;
-    const py = (event.clientY - rect.top) / rect.height - 0.5;
-    cancelAnimationFrame(frame.current);
-    frame.current = requestAnimationFrame(() => {
-      el.style.transform = `perspective(900px) rotateX(${(py * -8).toFixed(2)}deg) rotateY(${(px * 10).toFixed(2)}deg)`;
-    });
-  }
-
-  function handleLeave() {
-    const el = ref.current;
-    if (el === null) return;
-    cancelAnimationFrame(frame.current);
-    el.style.transform = "perspective(900px) rotateX(0deg) rotateY(0deg)";
-  }
-
+/** Etiqueta de sección: tag mono bordeada, no un eyebrow suelto. */
+function SectionTag({ children }: { children: ReactNode }) {
   return (
-    <div
-      ref={ref}
-      onPointerMove={handleMove}
-      onPointerLeave={handleLeave}
-      className="transition-transform duration-200 ease-out will-change-transform"
-    >
+    <span className="inline-block rounded-md border border-gold/45 bg-gold-soft px-2.5 py-1 font-mono text-[11px] font-semibold tracking-[0.2em] text-gold">
       {children}
-    </div>
+    </span>
   );
 }
 
@@ -245,19 +214,24 @@ function SectionHeading({
   eyebrow,
   title,
   lead,
+  align = "left",
 }: {
   eyebrow: string;
   title: ReactNode;
   lead?: string;
+  align?: "left" | "right";
 }) {
   return (
-    <div className="max-w-3xl">
-      <p className="font-mono text-xs font-semibold tracking-[0.22em] text-gold">
-        {eyebrow}
-      </p>
-      <h2 className="font-display mt-4 text-4xl leading-[1.02] md:text-6xl">{title}</h2>
+    <div className={cx("max-w-3xl", align === "right" && "ml-auto text-right")}>
+      <SectionTag>{eyebrow}</SectionTag>
+      <h2 className="font-display mt-5 text-4xl leading-[1.04] md:text-5xl">{title}</h2>
       {lead !== undefined && (
-        <p className="mt-5 max-w-prose text-base leading-relaxed text-muted-foreground md:text-lg">
+        <p
+          className={cx(
+            "mt-5 max-w-prose text-base leading-relaxed text-muted-foreground md:text-lg",
+            align === "right" && "ml-auto",
+          )}
+        >
           {lead}
         </p>
       )}
@@ -266,49 +240,65 @@ function SectionHeading({
 }
 
 const hoverLift =
-  "transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-y-1 hover:shadow-float";
+  "transition-[transform,box-shadow,border-color] duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-float";
 
 const navLinks = [
-  { href: "#problem", label: "The problem" },
-  { href: "#defaults", label: "Defaults" },
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#principles", label: "Principles" },
+  { href: "#problem", label: "PROBLEM" },
+  { href: "#defaults", label: "DEFAULTS" },
+  { href: "#how-it-works", label: "HOW" },
+  { href: "#principles", label: "PRINCIPLES" },
 ];
 
-/** La mini terminal del hero: la decisión como objeto, en mono sobre tinta. */
+/** La terminal del diagrama: cada línea entra sola, con cursor titilando. */
 function HeroTerminal() {
+  const lines = [
+    { text: "> charge api-credits USD 9.00", tone: "plain" },
+    { text: "✓ APPROVED · receipt #01", tone: "ok" },
+    { text: "> charge api-credits USD 9.00", tone: "plain" },
+    { text: "✗ DENY · LIFETIME_EXCEEDED", tone: "bad" },
+  ] as const;
+
   return (
-    <div className="shadow-float overflow-hidden rounded-2xl bg-[oklch(0.19_0.022_265)] text-left">
-      <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2.5">
-        <span aria-hidden="true" className="size-2.5 rounded-full bg-[oklch(0.68_0.19_24)]" />
-        <span aria-hidden="true" className="size-2.5 rounded-full bg-[oklch(0.83_0.14_90)]" />
-        <span aria-hidden="true" className="size-2.5 rounded-full bg-[oklch(0.72_0.15_155)]" />
-        <span className="ml-2 font-mono text-[10px] tracking-[0.18em] text-white/40">
+    <div className="shadow-float overflow-hidden rounded-xl border border-foreground/20 bg-[oklch(0.19_0.022_265)] text-left">
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2">
+        <span className="font-mono text-[10px] tracking-[0.18em] text-white/45">
           KONEX · MCP
+        </span>
+        <span aria-hidden="true" className="font-mono text-[10px] text-white/30">
+          stdio
         </span>
       </div>
       <div className="num space-y-1.5 px-4 py-3.5 text-xs leading-relaxed">
-        <p className="text-white/80">
-          <span className="text-white/35">&gt;</span> charge api-credits USD 9.00
-        </p>
-        <p className="text-[oklch(0.8_0.15_155)]">✓ APPROVED · receipt #01</p>
-        <p className="text-white/80">
-          <span className="text-white/35">&gt;</span> charge api-credits USD 9.00
-        </p>
-        <p className="text-[oklch(0.74_0.17_24)]">
-          ✗ DENY · LIFETIME_EXCEEDED — cap USD 10.00
+        {lines.map((line, index) => (
+          <p
+            key={line.text + String(index)}
+            className={cx(
+              "animate-fade-up",
+              line.tone === "plain" && "text-white/80",
+              line.tone === "ok" && "text-[oklch(0.8_0.15_155)]",
+              line.tone === "bad" && "text-[oklch(0.74_0.17_24)]",
+            )}
+            style={{ animationDelay: `${600 + index * 350}ms` }}
+          >
+            {line.text}
+          </p>
+        ))}
+        <p className="animate-fade-up text-white/60" style={{ animationDelay: "2050ms" }}>
+          <span className="animate-blink">▌</span>
         </p>
       </div>
     </div>
   );
 }
 
-/** La tarjetita de specs que flota al lado de la tarjeta, estilo ficha técnica. */
+/** La política como ficha: lo que definís antes de que exista la tarjeta. */
 function SpecCard() {
   return (
-    <div className="shadow-float rounded-2xl border border-border bg-card p-4">
-      <p className="font-display text-lg leading-none">Issue a card</p>
-      <dl className="mt-3 space-y-2">
+    <div className="shadow-float rounded-xl border border-foreground/20 bg-card p-4 text-left">
+      <p className="num text-[10px] font-semibold tracking-[0.18em] text-muted-foreground">
+        request_card
+      </p>
+      <dl className="mt-3 space-y-2 border-t border-border pt-3">
         {[
           { k: "Cap", v: "USD 10.00" },
           { k: "Expires", v: "24 h" },
@@ -325,159 +315,185 @@ function SpecCard() {
   );
 }
 
+/** Paso del diagrama del hero: etiqueta mono arriba, el objeto abajo. */
+function FlowStep({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="w-full">
+      <p className="mb-2.5 text-center font-mono text-[10px] font-semibold tracking-[0.22em] text-muted-foreground">
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function FlowArrow() {
+  return (
+    <div aria-hidden="true" className="flex items-center justify-center px-1 py-1 md:pt-7">
+      <ArrowRight className="hidden size-5 text-gold md:block" />
+      <ArrowDown className="size-5 text-gold md:hidden" />
+    </div>
+  );
+}
+
+const DEFAULTS_MARQUEE = [
+  "LIFETIME CAP",
+  "TTL WITH AUTO-CLOSE",
+  "MERCHANT ALLOWLIST",
+  "KILL SWITCH",
+  "RECEIPT PER CHARGE",
+  "SPANISH-FIRST",
+];
+
+function Marquee() {
+  return (
+    <div className="marquee border-y border-foreground/15 bg-card py-3">
+      <div className="marquee-track">
+        {[0, 1].map((copy) => (
+          <ul
+            key={copy}
+            aria-hidden={copy === 1}
+            className="flex shrink-0 items-center font-mono text-xs font-semibold tracking-[0.2em] text-foreground/80"
+          >
+            {DEFAULTS_MARQUEE.map((item) => (
+              <li key={item} className="flex items-center">
+                <span className="px-5">{item}</span>
+                <span aria-hidden="true" className="text-gold">
+                  ✦
+                </span>
+              </li>
+            ))}
+          </ul>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Landing() {
   return (
     <div className="min-h-screen overflow-x-clip">
       <a
         href="#content"
         className={cx(
-          "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground",
+          "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground",
         )}
       >
         Skip to content
       </a>
 
-      <header className="sticky top-3 z-40 px-3 md:top-4">
-        <nav className="shadow-soft mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-full border border-border bg-card/95 py-2 pl-3 pr-2 backdrop-blur-md">
-          <a href="index.html" className={cx("flex items-center gap-2.5 rounded-full", focusRing)}>
-            <img src="logo-light.png" alt="" className="size-8 rounded-full border border-border" />
-            <span className="font-display text-xl leading-none">Konex</span>
+      <header className="sticky top-0 z-40 border-b border-foreground/15 bg-background/90 backdrop-blur-md">
+        <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5 md:px-6">
+          <a href="index.html" className={cx("flex items-center gap-2.5 rounded-md", focusRing)}>
+            <img src="logo-light.png" alt="" className="size-8 rounded-md border border-border" />
+            <span className="font-display text-lg leading-none">Konex</span>
           </a>
-          <div className="hidden items-center gap-1 md:flex">
+          <div className="hidden items-center gap-5 md:flex">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 className={cx(
-                  "rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-[color,background-color] duration-100 ease-out hover:bg-muted hover:text-foreground",
+                  "rounded-sm font-mono text-[11px] font-semibold tracking-[0.18em] text-muted-foreground transition-colors duration-100 ease-out hover:text-accent",
                   focusRing,
                 )}
               >
                 {link.label}
               </a>
             ))}
-          </div>
-          <div className="flex items-center gap-2">
             <a
               href="panel.html"
               className={cx(
-                "hidden rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-[color,background-color] duration-100 ease-out hover:bg-muted hover:text-foreground sm:inline-flex",
+                "rounded-sm font-mono text-[11px] font-semibold tracking-[0.18em] text-muted-foreground transition-colors duration-100 ease-out hover:text-accent",
                 focusRing,
               )}
             >
-              Dashboard
+              DASHBOARD
             </a>
-            <CtaLink href="simulador.html" variant="ink">
-              Try the simulator
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </CtaLink>
           </div>
+          <CtaLink href="simulador.html" variant="ink">
+            Try the simulator
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </CtaLink>
         </nav>
       </header>
 
       <main id="content">
         <section className="relative">
-          <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pb-16 pt-14 md:px-6 md:pb-24 md:pt-20 lg:grid-cols-[1.05fr_0.95fr]">
-            <div>
-              <div className="animate-fade-up">
-                <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 font-mono text-[11px] font-semibold tracking-[0.18em] text-muted-foreground">
-                  <span aria-hidden="true" className="size-1.5 rounded-full bg-gold" />
-                  ONE CARD · ONE TASK · ONE CAP
-                </span>
-              </div>
-              <h1
-                className="font-display animate-fade-up mt-6 text-6xl leading-[0.98] md:text-[5.4rem]"
-                style={{ animationDelay: "60ms" }}
-              >
-                The card that
-                <br />
-                knows how to
-                <br />
-                say <span className="display-accent">no.</span>
-              </h1>
-              <p
-                className="animate-fade-up mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground"
-                style={{ animationDelay: "120ms" }}
-              >
-                Virtual cards with safe defaults for AI agents that shop on their
-                own. You set the budget, the merchant and the lifespan. The agent
-                buys. Everything else gets declined — with the exact reason on
-                the receipt.
-              </p>
-              <div
-                className="animate-fade-up mt-8 flex flex-wrap items-center gap-3"
-                style={{ animationDelay: "180ms" }}
-              >
-                <CtaLink href="simulador.html">
-                  Try the simulator
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </CtaLink>
-                <CtaLink href="panel.html" variant="outline">
-                  See the panel
-                </CtaLink>
-              </div>
-              <p
-                className="animate-fade-up mt-6 flex max-w-xl items-center gap-2 text-xs text-muted-foreground"
-                style={{ animationDelay: "240ms" }}
-              >
-                <FlaskConical className="size-3.5 shrink-0" aria-hidden="true" />
-                Today this is a simulator with a mock issuer: no real money.
-                Integrating a KYC issuer is the next step, not a vague promise.
-              </p>
+          <div className="mx-auto max-w-4xl px-4 pt-16 text-center md:px-6 md:pt-24">
+            <div className="animate-fade-up flex justify-center">
+              <span className="inline-flex items-center gap-2 rounded-md border border-foreground/20 bg-card px-3 py-1.5 font-mono text-[11px] font-semibold tracking-[0.18em] text-muted-foreground">
+                <span aria-hidden="true" className="size-1.5 rounded-full bg-gold" />
+                ONE CARD · ONE TASK · ONE CAP
+              </span>
             </div>
-
-            <div
-              className="animate-fade-up relative mx-auto w-full max-w-md"
-              style={{ animationDelay: "200ms" }}
+            <h1
+              className="font-display animate-fade-up mt-7 text-5xl leading-[1.02] md:text-7xl"
+              style={{ animationDelay: "80ms" }}
             >
-              {/* La línea punteada que une la política con la decisión. */}
-              <div
-                aria-hidden="true"
-                className="absolute left-[30%] top-[30%] hidden h-[55%] border-l-2 border-dashed border-foreground/15 sm:block"
-              />
-              <div className="relative rotate-[3deg]">
-                <TiltCard>
-                  <VirtualCard
-                    issued
-                    last4="4021"
-                    status="activa"
-                    ttlLabel="24 H"
-                    presetLabel="SAFE"
-                    className="shadow-float"
-                  />
-                </TiltCard>
-              </div>
-              <div className="animate-float relative z-10 -mt-9 ml-auto w-[62%] -rotate-2 sm:-mr-6">
+              The card that knows
+              <br />
+              how to say <span className="display-stamp">NO.</span>
+            </h1>
+            <p
+              className="animate-fade-up mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground"
+              style={{ animationDelay: "160ms" }}
+            >
+              Virtual cards with safe defaults for AI agents that shop on their
+              own. You set the budget, the merchant and the lifespan. The agent
+              buys. Everything else gets declined — with the exact reason on
+              the receipt.
+            </p>
+            <div
+              className="animate-fade-up mt-8 flex flex-wrap items-center justify-center gap-3"
+              style={{ animationDelay: "240ms" }}
+            >
+              <CtaLink href="simulador.html">
+                Try the simulator
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </CtaLink>
+              <CtaLink href="panel.html" variant="outline">
+                See the panel
+              </CtaLink>
+            </div>
+            <p
+              className="animate-fade-up mx-auto mt-6 flex max-w-xl items-center justify-center gap-2 text-xs text-muted-foreground"
+              style={{ animationDelay: "320ms" }}
+            >
+              <FlaskConical className="size-3.5 shrink-0" aria-hidden="true" />
+              Today this is a simulator with a mock issuer: no real money.
+              Integrating a KYC issuer is the next step, not a vague promise.
+            </p>
+          </div>
+
+          {/* La historia del producto en una línea: política → tarjeta → decisión. */}
+          <div
+            className="animate-fade-up mx-auto mt-14 max-w-6xl px-4 pb-16 md:mt-20 md:px-6 md:pb-20"
+            style={{ animationDelay: "380ms" }}
+          >
+            <div className="grid items-start gap-2 md:grid-cols-[1fr_auto_1.15fr_auto_1fr] md:gap-3">
+              <FlowStep label="01 · YOU SET THE POLICY">
                 <SpecCard />
-              </div>
-              <div className="animate-float-slow relative z-10 mt-4 w-[88%] rotate-1">
+              </FlowStep>
+              <FlowArrow />
+              <FlowStep label="02 · THE AGENT GETS A CARD">
+                <VirtualCard
+                  issued
+                  last4="4021"
+                  status="activa"
+                  ttlLabel="24 H"
+                  presetLabel="SAFE"
+                  className="shadow-float"
+                />
+              </FlowStep>
+              <FlowArrow />
+              <FlowStep label="03 · EVERY CHARGE IS DECIDED">
                 <HeroTerminal />
-              </div>
+              </FlowStep>
             </div>
           </div>
 
-          <div className="mx-auto max-w-6xl px-4 pb-16 md:px-6 md:pb-20">
-            <p className="font-mono text-[11px] font-semibold tracking-[0.22em] text-muted-foreground">
-              SAFE DEFAULTS · ALWAYS ON
-            </p>
-            <ul className="mt-4 flex flex-wrap gap-2">
-              {[
-                "Lifetime cap",
-                "TTL with auto-close",
-                "Merchant allowlist",
-                "Kill switch",
-                "Receipt per charge",
-                "Spanish-first",
-              ].map((label) => (
-                <li
-                  key={label}
-                  className="shadow-soft rounded-full border border-border bg-card px-4 py-2 text-sm font-medium"
-                >
-                  {label}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Marquee />
         </section>
 
         <section id="problem" className="relative">
@@ -521,24 +537,23 @@ export function Landing() {
                 <Reveal key={item.title} delayMs={index * 80}>
                   <article
                     className={cx(
-                      "shadow-soft relative h-full overflow-hidden rounded-3xl border border-border bg-card p-6",
+                      "shadow-soft relative h-full rounded-xl border border-foreground/20 bg-card p-6",
                       hoverLift,
                     )}
                   >
-                    <span
-                      aria-hidden="true"
-                      className="font-display absolute -right-1 -top-4 text-8xl italic text-gold/25"
-                    >
-                      {item.n}
-                    </span>
-                    <span className="flex size-10 items-center justify-center rounded-full bg-destructive-soft text-destructive">
-                      <item.icon className="size-5" aria-hidden="true" />
-                    </span>
+                    <div className="flex items-center justify-between">
+                      <span className="flex size-10 items-center justify-center rounded-md bg-destructive-soft text-destructive">
+                        <item.icon className="size-5" aria-hidden="true" />
+                      </span>
+                      <span className="num rounded-md border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+                        {item.n}
+                      </span>
+                    </div>
                     <h3 className="font-display mt-5 text-2xl">{item.title}</h3>
                     <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                       {item.body}
                     </p>
-                    <p className="num mt-5 rounded-xl bg-destructive-soft px-3 py-2 text-xs font-medium text-destructive">
+                    <p className="num mt-5 rounded-md bg-destructive-soft px-3 py-2 text-xs font-medium text-destructive">
                       {item.code}
                     </p>
                   </article>
@@ -548,10 +563,11 @@ export function Landing() {
           </div>
         </section>
 
-        <section id="defaults" className="relative">
+        <section id="defaults" className="relative border-t border-foreground/10">
           <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
             <Reveal>
               <SectionHeading
+                align="right"
                 eyebrow="THE PRODUCT"
                 title={
                   <>
@@ -604,13 +620,13 @@ export function Landing() {
                 <Reveal key={item.title} delayMs={(index % 3) * 70} className={item.span}>
                   <article
                     className={cx(
-                      "shadow-soft flex h-full flex-col rounded-3xl border border-border bg-card p-6",
+                      "shadow-soft flex h-full flex-col rounded-xl border border-foreground/20 bg-card p-6",
                       hoverLift,
                     )}
                   >
                     <span
                       className={cx(
-                        "flex size-11 items-center justify-center rounded-full",
+                        "flex size-10 items-center justify-center rounded-md",
                         index % 2 === 0
                           ? "bg-accent-soft text-accent"
                           : "bg-gold-soft text-gold",
@@ -629,7 +645,7 @@ export function Landing() {
           </div>
         </section>
 
-        <section id="how-it-works" className="relative">
+        <section id="how-it-works" className="relative border-t border-foreground/10">
           <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
             <Reveal>
               <SectionHeading
@@ -642,11 +658,7 @@ export function Landing() {
                 }
               />
             </Reveal>
-            <ol className="relative mt-14 grid gap-6 md:grid-cols-3">
-              <span
-                aria-hidden="true"
-                className="absolute left-[16%] right-[16%] top-10 hidden border-t-2 border-dashed border-foreground/15 md:block"
-              />
+            <ol className="mt-12 divide-y divide-border">
               {[
                 {
                   n: "01",
@@ -667,21 +679,21 @@ export function Landing() {
                   code: "DENY · LIFETIME_EXCEEDED — USD 10.00 cap",
                 },
               ].map((step, index) => (
-                <Reveal key={step.n} delayMs={index * 80} className="h-full">
-                  <li
-                    className={cx(
-                      "shadow-soft relative flex h-full flex-col rounded-3xl border border-border bg-card p-6",
-                      hoverLift,
-                    )}
-                  >
-                    <span className="font-display relative z-10 text-5xl italic text-accent">
+                <Reveal key={step.n} delayMs={index * 80}>
+                  <li className="grid gap-4 py-8 md:grid-cols-[auto_1.1fr_1fr] md:gap-10">
+                    <span
+                      aria-hidden="true"
+                      className="font-display text-outline text-6xl leading-none md:text-7xl"
+                    >
                       {step.n}
                     </span>
-                    <h3 className="font-display mt-5 text-2xl">{step.title}</h3>
-                    <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
-                      {step.body}
-                    </p>
-                    <p className="num mt-5 break-words rounded-xl bg-muted px-3 py-2.5 text-xs text-muted-foreground">
+                    <div>
+                      <h3 className="font-display text-2xl md:text-3xl">{step.title}</h3>
+                      <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground md:text-base">
+                        {step.body}
+                      </p>
+                    </div>
+                    <p className="num shadow-soft self-center break-words rounded-lg border border-foreground/15 bg-card px-4 py-3 text-xs text-muted-foreground">
                       {step.code}
                     </p>
                   </li>
@@ -691,10 +703,11 @@ export function Landing() {
           </div>
         </section>
 
-        <section id="principles" className="relative">
+        <section id="principles" className="relative border-t border-foreground/10">
           <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
             <Reveal>
               <SectionHeading
+                align="right"
                 eyebrow="PRINCIPLES"
                 title={
                   <>
@@ -704,7 +717,7 @@ export function Landing() {
                 }
               />
             </Reveal>
-            <div className="mt-14 space-y-5">
+            <div className="mt-14 grid gap-5 lg:grid-cols-3">
               {[
                 {
                   n: "01",
@@ -725,22 +738,28 @@ export function Landing() {
                   body: "The decision lives outside the prompt and is evaluated server-side. There is no jailbreak that talks a policy into overspending.",
                 },
               ].map((rule, index) => (
-                <Reveal key={rule.title} delayMs={index * 70}>
-                  <div className="shadow-soft grid items-start gap-6 rounded-3xl border border-border bg-card p-6 md:grid-cols-[auto_1fr] md:p-8">
-                    <span className="font-display text-6xl italic leading-none text-gold/40 md:text-7xl">
-                      {rule.n}
-                    </span>
-                    <div className="flex gap-4">
-                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold">
+                <Reveal key={rule.title} delayMs={index * 70} className="h-full">
+                  <div
+                    className={cx(
+                      "shadow-soft flex h-full flex-col rounded-xl border border-foreground/20 bg-card p-6",
+                      hoverLift,
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex size-10 items-center justify-center rounded-md bg-gold-soft text-gold">
                         <rule.icon className="size-5" aria-hidden="true" />
                       </span>
-                      <div>
-                        <h3 className="font-display text-3xl md:text-4xl">{rule.title}</h3>
-                        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
-                          {rule.body}
-                        </p>
-                      </div>
+                      <span
+                        aria-hidden="true"
+                        className="font-display text-outline text-5xl leading-none"
+                      >
+                        {rule.n}
+                      </span>
                     </div>
+                    <h3 className="font-display mt-5 text-2xl">{rule.title}</h3>
+                    <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+                      {rule.body}
+                    </p>
                   </div>
                 </Reveal>
               ))}
@@ -748,15 +767,15 @@ export function Landing() {
           </div>
         </section>
 
-        <section className="relative">
+        <section className="relative border-t border-foreground/10">
           <div className="mx-auto max-w-6xl px-4 py-16 md:px-6 md:py-24">
             <Reveal>
-              <div className="shadow-float relative overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-12">
+              <div className="shadow-float relative overflow-hidden rounded-xl border border-foreground/20 bg-card p-8 md:p-12">
                 <Chip tone="warning" dot={false}>
                   <FlaskConical className="size-3" aria-hidden="true" />
                   WHERE WE ARE, NO SMOKE
                 </Chip>
-                <h2 className="font-display mt-5 text-4xl leading-[1.02] md:text-6xl">
+                <h2 className="font-display mt-5 max-w-3xl text-4xl leading-[1.04] md:text-5xl">
                   Today: a policy engine tested against a{" "}
                   <span className="display-accent">simulated</span> issuer.
                 </h2>
@@ -781,11 +800,11 @@ export function Landing() {
         </section>
       </main>
 
-      <footer className="border-t border-border">
+      <footer className="border-t border-foreground/15">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 md:flex-row md:items-center md:justify-between md:px-6">
           <div className="flex items-center gap-3">
-            <img src="logo-light.png" alt="" className="size-9 rounded-full border border-border" />
-            <span className="font-display text-xl">Konex</span>
+            <img src="logo-light.png" alt="" className="size-9 rounded-md border border-border" />
+            <span className="font-display text-lg">Konex</span>
           </div>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
             A control layer, not an issuer. The BIN, the bank and the KYC are
@@ -794,11 +813,11 @@ export function Landing() {
           <a
             href="simulador.html"
             className={cx(
-              "rounded-sm text-sm font-medium text-accent underline-offset-4 hover:underline",
+              "rounded-sm font-mono text-[11px] font-semibold tracking-[0.18em] text-accent underline-offset-4 hover:underline",
               focusRing,
             )}
           >
-            Simulator
+            SIMULATOR
           </a>
         </div>
       </footer>

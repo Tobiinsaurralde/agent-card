@@ -21,7 +21,8 @@ interface ButtonProps extends ComponentPropsWithRef<"button"> {
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary: "bg-primary text-primary-foreground shadow-soft hover:bg-primary/85",
-  outline: "border border-border bg-card text-foreground shadow-soft hover:border-foreground/25",
+  outline:
+    "border border-foreground/20 bg-card text-foreground shadow-soft hover:border-foreground/45",
   ghost: "text-foreground hover:bg-muted",
   danger:
     "border border-destructive/35 bg-destructive-soft text-destructive hover:border-destructive/60",
@@ -39,9 +40,9 @@ export function Button({
       type={type}
       // min-h-10 = 40px, el mínimo táctil. active:scale da feedback físico <100ms.
       className={cx(
-        "inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full font-medium",
-        size === "md" ? "px-5 text-sm" : "px-3.5 text-xs",
-        "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg font-semibold",
+        size === "md" ? "px-4 text-sm" : "px-3 text-xs",
+        "active:translate-x-px active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-50",
         feedback,
         focusRing,
         buttonVariants[variant],
@@ -56,7 +57,7 @@ export function Input({ className, ...props }: ComponentPropsWithRef<"input">) {
   return (
     <input
       className={cx(
-        "min-h-10 w-full rounded-xl border border-input bg-card px-3 text-sm text-foreground",
+        "min-h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground",
         "placeholder:text-muted-foreground/70 hover:border-muted-foreground/40",
         "aria-[invalid=true]:border-destructive",
         feedback,
@@ -76,7 +77,7 @@ export function Select({
   return (
     <select
       className={cx(
-        "min-h-10 w-full cursor-pointer rounded-xl border border-input bg-card px-3 text-sm text-foreground",
+        "min-h-10 w-full cursor-pointer rounded-lg border border-input bg-card px-3 text-sm text-foreground",
         "hover:border-muted-foreground/40",
         feedback,
         focusRing,
@@ -105,7 +106,7 @@ export function Segmented<T extends string>({
     <div
       role="group"
       aria-label={label}
-      className="grid grid-cols-2 gap-1 rounded-full border border-border bg-muted p-1"
+      className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-muted p-1"
     >
       {options.map((option) => {
         const active = option.value === value;
@@ -116,7 +117,7 @@ export function Segmented<T extends string>({
             aria-pressed={active}
             onClick={() => onChange(option.value)}
             className={cx(
-              "inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-full px-3 text-sm font-medium",
+              "inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium",
               feedback,
               focusRing,
               active
@@ -262,7 +263,7 @@ export function Chip({
   return (
     <span
       className={cx(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wider",
         chipTones[tone],
       )}
     >

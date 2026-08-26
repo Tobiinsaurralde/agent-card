@@ -130,8 +130,16 @@ test("el techo por tarjeta lo pone el servidor, no el que pide", async () => {
 });
 
 test("sin el gate el emisor es el mock y no hay número real", async () => {
+  // No usa spawn() porque necesita apagar el gate, pero el ledger aislado
+  // sigue siendo obligatorio: sin él levantaría el estado real del usuario.
+  const state = join(mkdtempSync(join(tmpdir(), "agent-card-test-")), "state.json");
   const mcp = await AgentCardClient.spawn({
-    env: { ...process.env, AGENT_CARD_ALLOW_MANUAL_PAN: "", STEEL_API_KEY: "" },
+    env: {
+      ...process.env,
+      AGENT_CARD_ALLOW_MANUAL_PAN: "",
+      AGENT_CARD_STATE: state,
+      STEEL_API_KEY: "",
+    },
   });
   try {
     const budget = await mcp.budget();
