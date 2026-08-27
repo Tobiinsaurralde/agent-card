@@ -67,6 +67,13 @@ export async function launchChrome(
       "--no-first-run",
       "--no-default-browser-check",
       "--disable-gpu",
+      // El sandbox de Chrome necesita user namespaces que los runners de CI no
+      // dan, y sin esto el proceso muere antes de publicar el puerto: el test
+      // falla a los 20s por timeout, sin decir que el problema fue el arranque.
+      // Se apaga sólo en CI, donde el checkout es un server local nuestro.
+      ...(process.env["CI"] === undefined
+        ? []
+        : ["--no-sandbox", "--disable-dev-shm-usage"]),
     ],
     { stdio: "ignore" },
   );
