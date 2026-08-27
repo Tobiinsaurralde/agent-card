@@ -10,9 +10,9 @@ export function Ledger({ rows }: { rows: LogRow[] }) {
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-1.5 py-10 text-center">
-        <p className="text-sm font-medium text-foreground">Todavía no hubo intentos</p>
+        <p className="text-sm font-medium text-foreground">No attempts yet</p>
         <p className="text-xs text-muted-foreground">
-          Probá un cobro de USD 9.00 y después repetilo: el segundo cuenta la historia.
+          Try a USD 9.00 charge and then repeat it: the second one tells the story.
         </p>
       </div>
     );
@@ -37,7 +37,7 @@ export function Ledger({ rows }: { rows: LogRow[] }) {
                 {row.merchant}
               </p>
               <p className="text-xs text-muted-foreground">
-                {kindLabel(row.kind)} · {row.currency} · día {row.dayOffset}
+                {kindLabel(row.kind)} · {row.currency} · day {row.dayOffset}
               </p>
             </div>
             <span
@@ -49,14 +49,14 @@ export function Ledger({ rows }: { rows: LogRow[] }) {
               {fmt(row.amountCents)}
             </span>
             <Chip tone={row.approved ? "success" : "destructive"}>
-              {row.approved ? "APROBADO" : "RECHAZADO"}
+              {row.approved ? "APPROVED" : "DECLINED"}
             </Chip>
           </div>
           <p className="mt-1.5 pl-10 text-xs leading-relaxed text-muted-foreground">
             <span className={cx("num", !row.approved && "font-semibold text-destructive")}>
               {row.code}
             </span>{" "}
-            — {row.reason}
+            · {row.reason}
           </p>
         </li>
       ))}
@@ -67,12 +67,12 @@ export function Ledger({ rows }: { rows: LogRow[] }) {
 function kindLabel(kind: LogRow["kind"]): string {
   switch (kind) {
     case "capture":
-      return "Captura";
+      return "Capture";
     case "auth":
-      return "Autorización";
+      return "Authorization";
     case "incremental":
       return "Incremental";
     case "refund":
-      return "Devolución";
+      return "Refund";
   }
 }

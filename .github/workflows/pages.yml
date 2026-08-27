@@ -56,9 +56,9 @@ jobs:
 
       - name: Build
         env:
-          # Repo de proyecto: el sitio cuelga de /<repo>/. Con dominio propio,
-          # cambiar a "/".
-          SITE_BASE: /${{ github.event.repository.name }}/
+          # Dominio propio (konex.xyz): el sitio vive en la raíz. Si volvemos a
+          # servirlo desde /<repo>/ en github.io, esto tiene que ser /repo/.
+          SITE_BASE: /
           VITE_WAITLIST_ENDPOINT: ${{ vars.WAITLIST_ENDPOINT }}
         run: npm run build
 

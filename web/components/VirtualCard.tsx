@@ -35,7 +35,7 @@ export function VirtualCard({
         className="flex aspect-[1.586] w-full items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/40"
       >
         <p className="text-xs font-medium tracking-wide text-muted-foreground">
-          NOT ISSUED
+          NO CARD
         </p>
       </div>
     );

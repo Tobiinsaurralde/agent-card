@@ -151,7 +151,7 @@ export function Field({ id, label, hint, error, required, children }: FieldProps
       <label htmlFor={id} className="block text-[13px] font-medium text-foreground">
         {label}
         {required === true && (
-          <span className="font-normal text-muted-foreground"> · obligatorio</span>
+          <span className="font-normal text-muted-foreground"> · required</span>
         )}
       </label>
       {children}

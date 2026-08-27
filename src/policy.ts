@@ -56,43 +56,43 @@ export function evaluate(
   // cierra la tarjeta, así que si `CARD_CLOSED` fuera primero taparía el motivo
   // real y el recibo diría "cerrada" en vez de "la tarea terminó".
   if (state.killed) {
-    return deny("KILL_SWITCH", "Kill switch global activo.");
+    return deny("KILL_SWITCH", "Global kill switch is on.");
   }
   if (policy.closeOnTaskComplete && state.taskComplete) {
     return deny(
       "TASK_COMPLETE",
-      "La tarea que originó la tarjeta ya terminó. Sin esto, una suscripción sigue renovando para siempre.",
+      "The task that scoped this card is done. Without this, a subscription keeps renewing forever.",
     );
   }
   if (state.closed) {
-    return deny("CARD_CLOSED", "La tarjeta está cerrada.");
+    return deny("CARD_CLOSED", "The card is closed.");
   }
   if (policy.ttlSeconds !== null) {
     const ageSeconds = (attempt.at.getTime() - state.openedAt.getTime()) / 1000;
     if (ageSeconds > policy.ttlSeconds) {
       return deny(
         "EXPIRED",
-        `La tarjeta expiró: ${Math.round(ageSeconds)}s de vida contra un TTL de ${policy.ttlSeconds}s.`,
+        `The card expired: ${Math.round(ageSeconds)}s of life against a TTL of ${policy.ttlSeconds}s.`,
       );
     }
   }
 
   // 2. Un refund entrante nunca se rechaza: es plata que vuelve.
   if (attempt.kind === "refund") {
-    return { allow: true, code: "ALLOWED", reason: "Devolución del merchant." };
+    return { allow: true, code: "ALLOWED", reason: "Merchant refund." };
   }
 
   // 3. Alcance: quién puede cobrar y en qué moneda.
   if (policy.singleUse && approvedCount(state) >= 1) {
     return deny(
       "SINGLE_USE_CONSUMED",
-      "Tarjeta de un solo uso, ya consumida. Si el PAN se filtró al contexto del agente, acá deja de servir.",
+      "Single-use card, already spent. If the PAN leaked into the agent context, it stops working here.",
     );
   }
   if (policy.maxCharges !== null && approvedCount(state) >= policy.maxCharges) {
     return deny(
       "MAX_CHARGES_REACHED",
-      `Se alcanzó el máximo de ${policy.maxCharges} cargos aprobados.`,
+      `Reached the maximum of ${policy.maxCharges} approved charges.`,
     );
   }
   if (
@@ -101,7 +101,7 @@ export function evaluate(
   ) {
     return deny(
       "MERCHANT_NOT_ALLOWED",
-      `Merchant "${attempt.merchant}" fuera de la allowlist.`,
+      `Merchant "${attempt.merchant}" is not on the allowlist.`,
     );
   }
   if (policy.mccAllowlist !== null) {
@@ -110,7 +110,7 @@ export function evaluate(
     if (attempt.mcc === undefined || !policy.mccAllowlist.includes(attempt.mcc)) {
       return deny(
         "MCC_NOT_ALLOWED",
-        `MCC ${attempt.mcc ?? "ausente"} fuera de la allowlist.`,
+        `MCC ${attempt.mcc ?? "missing"} is not on the allowlist.`,
       );
     }
   }
@@ -120,7 +120,7 @@ export function evaluate(
   ) {
     return deny(
       "CURRENCY_NOT_ALLOWED",
-      `Moneda ${attempt.currency} no permitida. Un cap en USD no limita un cargo en otra moneda.`,
+      `Currency ${attempt.currency} is not allowed. A USD cap does not limit a charge in another currency.`,
     );
   }
 
@@ -131,7 +131,7 @@ export function evaluate(
   ) {
     return deny(
       "PER_TX_EXCEEDED",
-      `${fmt(attempt.amountCents)} supera el cap por transacción de ${fmt(policy.perTransactionCents)}.`,
+      `${fmt(attempt.amountCents)} exceeds the per-transaction cap of ${fmt(policy.perTransactionCents)}.`,
     );
   }
   if (policy.lifetimeCents !== null) {
@@ -139,12 +139,12 @@ export function evaluate(
     if (after > policy.lifetimeCents) {
       return deny(
         "LIFETIME_EXCEEDED",
-        `${fmt(after)} acumulados superarían el cap de ${fmt(policy.lifetimeCents)}.`,
+        `${fmt(after)} accumulated would exceed the cap of ${fmt(policy.lifetimeCents)}.`,
       );
     }
   }
 
-  return { allow: true, code: "ALLOWED", reason: "Dentro de la política." };
+  return { allow: true, code: "ALLOWED", reason: "Inside the policy." };
 }
 
 export function fmt(cents: Cents): string {

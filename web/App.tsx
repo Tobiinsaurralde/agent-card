@@ -158,20 +158,20 @@ export function App() {
     const next: Partial<Record<keyof Config, string>> = {};
 
     if (budgetCents === null || budgetCents === 0) {
-      next.budget = "Poné un monto mayor a cero. Por ejemplo: 10";
+      next.budget = "Enter an amount greater than zero. For example: 10";
     }
     if (perTxCents === null) {
-      next.perTx = "Monto inválido. Usá números, por ejemplo 9.50";
+      next.perTx = "Invalid amount. Use numbers, for example 9.50";
     } else if (budgetCents !== null && perTxCents > budgetCents) {
-      next.perTx = "No puede superar el presupuesto total.";
+      next.perTx = "Cannot exceed the total budget.";
     }
     if (preset === "safe") {
       if (config.merchant.trim() === "") {
         next.merchant =
-          "Hace falta el merchant: sin allowlist la tarjeta cobra en cualquier lado.";
+          "A merchant is required: without an allowlist the card charges anywhere.";
       }
       if (!Number.isFinite(ttlHours) || ttlHours <= 0) {
-        next.ttlHours = "Poné una cantidad de horas mayor a cero.";
+        next.ttlHours = "Enter a number of hours greater than zero.";
       }
     }
 
@@ -195,9 +195,9 @@ export function App() {
       setRows([]);
       setFatal(null);
       setAttempt((a) => ({ ...a, merchant: config.merchant.trim() || a.merchant }));
-      setLiveMessage("Tarjeta emitida.");
+      setLiveMessage("Card scoped.");
     } catch (error) {
-      setFatal(error instanceof Error ? error.message : "Error desconocido.");
+      setFatal(error instanceof Error ? error.message : "Unknown error.");
     } finally {
       setBusy(false);
     }
@@ -209,7 +209,7 @@ export function App() {
 
     const amountCents = usdToCents(attempt.amount);
     if (amountCents === null || amountCents === 0) {
-      setAttemptError("Poné un monto mayor a cero. Por ejemplo: 9");
+      setAttemptError("Enter an amount greater than zero. For example: 9");
       return;
     }
     setAttemptError(undefined);
@@ -230,11 +230,11 @@ export function App() {
       setRows((prev) => [...prev, row]);
       setLiveMessage(
         row.approved
-          ? `Cobro de ${fmt(row.amountCents)} en ${row.merchant} aprobado.`
-          : `Cobro de ${fmt(row.amountCents)} en ${row.merchant} rechazado: ${row.code}.`,
+          ? `Charge of ${fmt(row.amountCents)} at ${row.merchant} approved.`
+          : `Charge of ${fmt(row.amountCents)} at ${row.merchant} declined: ${row.code}.`,
       );
     } catch (error) {
-      setFatal(error instanceof Error ? error.message : "Error desconocido.");
+      setFatal(error instanceof Error ? error.message : "Unknown error.");
     } finally {
       setBusy(false);
     }
@@ -280,10 +280,10 @@ export function App() {
       }));
       setFatal(null);
       setLiveMessage(
-        `Escenario ${def.name}: la config permisiva aprobó ${fmt(permissiveSim.approvedCents)}, los defaults seguros ${fmt(safeSim.approvedCents)}.`,
+        `Scenario ${def.name}: permissive config approved ${fmt(permissiveSim.approvedCents)}, safe defaults ${fmt(safeSim.approvedCents)}.`,
       );
     } catch (error) {
-      setFatal(error instanceof Error ? error.message : "Error desconocido.");
+      setFatal(error instanceof Error ? error.message : "Unknown error.");
     } finally {
       setBusy(false);
     }
@@ -293,14 +293,14 @@ export function App() {
     if (card === null) return;
     await card.completeTask();
     setRows((prev) => [...prev]);
-    setLiveMessage("Tarea marcada como terminada. La tarjeta quedó cerrada.");
+    setLiveMessage("Task marked done. The card is now closed.");
   }
 
   async function handleKill() {
     if (card === null) return;
     await card.kill();
     setRows((prev) => [...prev]);
-    setLiveMessage("Kill switch activado. Todo cobro futuro se rechaza.");
+    setLiveMessage("Kill switch on. Every future charge is declined.");
   }
 
   function handleReset() {
@@ -316,9 +316,9 @@ export function App() {
   }
 
   const quickFills: Array<{ label: string; patch: Partial<Attempt> }> = [
-    { label: "Otro merchant", patch: { merchant: "casino-online" } },
-    { label: "Moneda EUR", patch: { currency: "EUR" } },
-    { label: "30 días después", patch: { dayOffset: "30" } },
+    { label: "Other merchant", patch: { merchant: "casino-online" } },
+    { label: "EUR currency", patch: { currency: "EUR" } },
+    { label: "30 days later", patch: { dayOffset: "30" } },
   ];
 
   return (
@@ -333,7 +333,7 @@ export function App() {
           <div className="flex min-w-0 items-center gap-2.5">
             <a
               href="index.html"
-              aria-label="Volver a la página principal"
+              aria-label="Back to the home page"
               className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <img
@@ -345,8 +345,8 @@ export function App() {
             </a>
             <Chip tone="warning" dot={false}>
               <FlaskConical className="size-3" aria-hidden="true" />
-              <span className="hidden sm:inline">SIMULACIÓN · SIN DINERO REAL</span>
-              <span className="sm:hidden">SIMULACIÓN</span>
+              <span className="hidden sm:inline">SIMULATION · NO REAL MONEY</span>
+              <span className="sm:hidden">SIMULATION</span>
             </Chip>
           </div>
           <div className="flex shrink-0 items-center gap-3">
@@ -359,7 +359,7 @@ export function App() {
             <button
               type="button"
               onClick={toggle}
-              aria-label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
               className="inline-flex size-9 cursor-pointer items-center justify-center rounded-md border border-transparent text-muted-foreground transition-[border-color,color] duration-100 ease-out hover:border-border hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {dark ? (
@@ -378,13 +378,13 @@ export function App() {
             POLICY SIMULATOR
           </p>
           <h1 className="font-display mt-3 text-4xl leading-[1.02] text-foreground md:text-5xl">
-            La tarjeta que sabe decir que{" "}
+            The card that knows how to say{" "}
             <span className="display-accent">no.</span>
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
-            Defaults seguros para agentes de IA que compran solos. Configurá la
-            política, intentá cobros y mirá exactamente qué se rechaza y por qué.
-            El emisor es un mock local: esto mide la política, no el rail.
+            Safe defaults for AI agents that shop on their own. Set the
+            policy, try charges and see exactly what gets declined and why.
+            The issuer is a local mock: this measures the policy, not the rail.
           </p>
         </div>
 
@@ -394,11 +394,11 @@ export function App() {
             className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-destructive/35 bg-destructive-soft p-4"
           >
             <p className="text-sm font-medium text-destructive">
-              No se pudo emitir la tarjeta
+              Could not scope the card
             </p>
             <p className="text-xs text-muted-foreground">{fatal}</p>
             <Button variant="outline" onClick={handleReset}>
-              Empezar de nuevo
+              Start over
             </Button>
           </div>
         )}
@@ -419,7 +419,7 @@ export function App() {
               <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-xs font-medium text-muted-foreground">
-                    Comprometido
+                    Committed
                   </span>
                   <span className="num text-xl font-semibold text-foreground">
                     {fmt(approvedCents)}
@@ -432,7 +432,7 @@ export function App() {
                       aria-valuenow={capPct ?? 0}
                       aria-valuemin={0}
                       aria-valuemax={100}
-                      aria-label="Consumo del cap acumulado"
+                      aria-label="Lifetime cap used"
                       className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
                     >
                       <div
@@ -449,7 +449,7 @@ export function App() {
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>
-                        Disponible{" "}
+                        Available{" "}
                         <span className="num font-medium text-foreground">
                           {fmt(availableCents ?? 0)}
                         </span>
@@ -459,7 +459,7 @@ export function App() {
                   </div>
                 ) : (
                   <p className="text-xs font-medium text-destructive">
-                    Sin cap acumulado: el gasto total no tiene techo.
+                    No lifetime cap: total spend has no ceiling.
                   </p>
                 )}
                 <div className="grid grid-cols-2 gap-2 border-t border-border pt-3">
@@ -470,7 +470,7 @@ export function App() {
                     disabled={busy || card.state.taskComplete}
                   >
                     <CheckCircle2 className="size-3.5" aria-hidden="true" />
-                    {card.state.taskComplete ? "Tarea terminada" : "Terminar tarea"}
+                    {card.state.taskComplete ? "Task done" : "End task"}
                   </Button>
                   <Button
                     variant="danger"
@@ -486,12 +486,12 @@ export function App() {
             )}
 
             <Panel
-              title="Política"
-              description="Las reglas que se evalúan antes de que el cobro llegue al rail."
+              title="Policy"
+              description="The rules evaluated before the charge reaches the rail."
             >
               <div className="mb-5 space-y-2">
                 <Segmented
-                  label="Perfil de política"
+                  label="Policy profile"
                   value={preset}
                   onChange={setPreset}
                   options={[
@@ -500,7 +500,7 @@ export function App() {
                       label: (
                         <>
                           <ShieldCheck className="size-3.5" aria-hidden="true" />
-                          Segura
+                          Safe
                         </>
                       ),
                     },
@@ -509,7 +509,7 @@ export function App() {
                       label: (
                         <>
                           <Zap className="size-3.5" aria-hidden="true" />
-                          Permisiva
+                          Permissive
                         </>
                       ),
                     },
@@ -517,8 +517,8 @@ export function App() {
                 />
                 <p className="text-xs leading-relaxed text-muted-foreground">
                   {preset === "safe"
-                    ? "Cap acumulado y TTL obligatorios, allowlist de merchant, cierre al terminar la tarea."
-                    : "Solo cap por transacción. Es lo que escribe todo el mundo primero — y lo que el proveedor acepta como válido."}
+                    ? "Mandatory lifetime cap and TTL, merchant allowlist, close when the task ends."
+                    : "Per-transaction cap only. What everyone writes first, and what the provider accepts as valid."}
                 </p>
               </div>
 
@@ -526,7 +526,7 @@ export function App() {
                 <div className="grid grid-cols-2 gap-3">
                   <Field
                     id="budget"
-                    label="Presupuesto (USD)"
+                    label="Budget (USD)"
                     required
                     error={errors.budget}
                   >
@@ -547,7 +547,7 @@ export function App() {
                       }
                     />
                   </Field>
-                  <Field id="perTx" label="Cap por cobro (USD)" error={errors.perTx}>
+                  <Field id="perTx" label="Cap per charge (USD)" error={errors.perTx}>
                     <Input
                       id="perTx"
                       ref={perTxRef}
@@ -569,12 +569,12 @@ export function App() {
 
                 <Field
                   id="merchant"
-                  label="Merchant permitido"
+                  label="Allowed merchant"
                   required={preset === "safe"}
                   hint={
                     preset === "safe"
-                      ? "Allowlist, no blacklist."
-                      : "Ignorado: la config permisiva no filtra merchant."
+                      ? "Allowlist, not blacklist."
+                      : "Ignored: the permissive config does not filter merchants."
                   }
                   error={errors.merchant}
                 >
@@ -596,12 +596,12 @@ export function App() {
 
                 <Field
                   id="ttlHours"
-                  label="Vida de la tarjeta (horas)"
+                  label="Card lifespan (hours)"
                   required={preset === "safe"}
                   hint={
                     preset === "safe"
-                      ? "Pasado el TTL se rechaza todo."
-                      : "Ignorado: la config permisiva no expira."
+                      ? "Past the TTL, everything is declined."
+                      : "Ignored: the permissive config does not expire."
                   }
                   error={errors.ttlHours}
                 >
@@ -624,8 +624,8 @@ export function App() {
 
                 <Checkbox
                   id="singleUse"
-                  label="Un solo uso"
-                  hint="La tarjeta muere después del primer cobro aprobado."
+                  label="Single use"
+                  hint="The card dies after the first approved charge."
                   checked={config.singleUse}
                   onChange={(next) => setConfig((c) => ({ ...c, singleUse: next }))}
                 />
@@ -633,13 +633,13 @@ export function App() {
                 <div className="flex gap-2 pt-1">
                   <Button type="submit" disabled={busy} aria-busy={busy} className="flex-1">
                     <CreditCard className="size-4" aria-hidden="true" />
-                    {card === null ? "Emitir tarjeta" : "Emitir una nueva"}
+                    {card === null ? "Request a card" : "Request a new one"}
                   </Button>
                   <Button
                     variant="ghost"
                     onClick={handleReset}
                     disabled={busy}
-                    aria-label="Reiniciar todo"
+                    aria-label="Reset everything"
                   >
                     <RotateCcw className="size-4" aria-hidden="true" />
                   </Button>
@@ -648,8 +648,9 @@ export function App() {
             </Panel>
 
             <p className="px-1 text-xs leading-relaxed text-muted-foreground">
-              La emisión, el BIN, el banco y el KYC se compran a un proveedor. Esta
-              capa solo decide si el cobro sale. El PAN nunca pasa por nuestro backend.
+              The BIN, the bank and KYC come from a licensed issuer. This
+              layer only decides if the charge goes through. The PAN never
+              touches our backend.
             </p>
           </div>
 
@@ -657,20 +658,20 @@ export function App() {
           <div className="space-y-5">
             {card !== null && (
               <dl className="shadow-soft grid grid-cols-2 divide-x-0 divide-y divide-primary-foreground/10 overflow-hidden rounded-2xl bg-primary text-primary-foreground sm:grid-cols-4 sm:divide-x sm:divide-y-0">
-                <StatCell label="Intentos" value={String(rows.length)} />
-                <StatCell label="Aprobados" value={String(approvedCount)} tone="success" />
-                <StatCell label="Rechazados" value={String(rejectedCount)} tone="destructive" />
+                <StatCell label="Attempts" value={String(rows.length)} />
+                <StatCell label="Approved" value={String(approvedCount)} tone="success" />
+                <StatCell label="Declined" value={String(rejectedCount)} tone="destructive" />
                 <StatCell
-                  label="Disponible"
-                  value={availableCents !== null ? fmt(availableCents) : "Sin techo"}
+                  label="Available"
+                  value={availableCents !== null ? fmt(availableCents) : "No ceiling"}
                   tone={availableCents === 0 ? "warning" : undefined}
                 />
               </dl>
             )}
 
             <Panel
-              title="Ataques conocidos"
-              description="Los dos agujeros que importan, corridos contra ambas configuraciones a la vez."
+              title="Known attacks"
+              description="The two holes that matter, run against both configurations at once."
             >
               <div className="grid gap-3 md:grid-cols-2">
                 {scenarioDefs.map((def) => {
@@ -685,7 +686,7 @@ export function App() {
                           {def.name}
                         </h3>
                         <span className="num shrink-0 text-xs text-muted-foreground">
-                          techo {fmt(def.intendedCapCents)}
+                          cap {fmt(def.intendedCapCents)}
                         </span>
                       </div>
                       <p className="text-xs leading-relaxed text-muted-foreground">
@@ -695,12 +696,12 @@ export function App() {
                       {verdict !== undefined && (
                         <dl className="animate-row-in space-y-1.5 rounded-md bg-muted/60 p-2.5">
                           <VerdictRow
-                            label="Permisiva"
+                            label="Permissive"
                             cents={verdict.permissiveCents}
                             capCents={def.intendedCapCents}
                           />
                           <VerdictRow
-                            label="Segura"
+                            label="Safe"
                             cents={verdict.safeCents}
                             capCents={def.intendedCapCents}
                           />
@@ -715,7 +716,7 @@ export function App() {
                         className="mt-auto"
                       >
                         <Play className="size-3.5" aria-hidden="true" />
-                        {verdict === undefined ? "Correr ataque" : "Correr de nuevo"}
+                        {verdict === undefined ? "Run attack" : "Run again"}
                       </Button>
                     </article>
                   );
@@ -724,18 +725,18 @@ export function App() {
             </Panel>
 
             {card === null ? (
-              <Panel title="Terminal de cobros" description="Todavía no hay tarjeta emitida.">
+              <Panel title="Charge terminal" description="No card scoped yet.">
                 <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
                   <span className="flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <CreditCard className="size-5" aria-hidden="true" />
                   </span>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
-                      Emití una tarjeta para empezar
+                      Request a card to start
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Elegí un perfil de política a la izquierda, o corré uno de los
-                      ataques de arriba: emiten y cobran solos.
+                      Pick a policy profile on the left, or run one of the
+                      attacks above: they scope a card and charge on their own.
                     </p>
                   </div>
                 </div>
@@ -743,12 +744,12 @@ export function App() {
             ) : (
               <>
                 <Panel
-                  title="Terminal de cobros"
-                  description="Cambiá el merchant, la moneda o los días para gatillar cada regla."
+                  title="Charge terminal"
+                  description="Change the merchant, currency or days to trigger each rule."
                 >
                   <form onSubmit={handleAttempt} className="space-y-4">
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      <Field id="amount" label="Monto (USD)" required error={attemptError}>
+                      <Field id="amount" label="Amount (USD)" required error={attemptError}>
                         <Input
                           id="amount"
                           inputMode="decimal"
@@ -776,7 +777,7 @@ export function App() {
                           }
                         />
                       </Field>
-                      <Field id="currency" label="Moneda">
+                      <Field id="currency" label="Currency">
                         <Select
                           id="currency"
                           value={attempt.currency}
@@ -789,7 +790,7 @@ export function App() {
                           <option value="ARS">ARS</option>
                         </Select>
                       </Field>
-                      <Field id="kind" label="Tipo">
+                      <Field id="kind" label="Type">
                         <Select
                           id="kind"
                           value={attempt.kind}
@@ -800,16 +801,16 @@ export function App() {
                             }))
                           }
                         >
-                          <option value="capture">Captura</option>
-                          <option value="auth">Autorización</option>
+                          <option value="capture">Capture</option>
+                          <option value="auth">Authorization</option>
                           <option value="incremental">Incremental</option>
-                          <option value="refund">Devolución</option>
+                          <option value="refund">Refund</option>
                         </Select>
                       </Field>
                       <Field
                         id="dayOffset"
-                        label="Días desde la emisión"
-                        hint="Para probar el TTL sin esperar."
+                        label="Days since the card opened"
+                        hint="To test TTL without waiting."
                       >
                         <Input
                           id="dayOffset"
@@ -828,10 +829,10 @@ export function App() {
 
                     <div className="flex flex-wrap items-center gap-2">
                       <Button type="submit" disabled={busy} aria-busy={busy}>
-                        Intentar cobro
+                        Try a charge
                       </Button>
                       <span className="text-xs text-muted-foreground" aria-hidden="true">
-                        o probá:
+                        or try:
                       </span>
                       {quickFills.map((quick) => (
                         <Button
@@ -848,8 +849,8 @@ export function App() {
                 </Panel>
 
                 <Panel
-                  title="Libro mayor"
-                  description="Cada intento con el motivo exacto de la decisión. Lo más nuevo arriba."
+                  title="Ledger"
+                  description="Every attempt with the exact decision reason. Newest first."
                 >
                   <Ledger rows={rows} />
                 </Panel>
@@ -860,7 +861,7 @@ export function App() {
 
         <footer className="mt-12 border-t border-border pt-5">
           <p className="text-xs text-muted-foreground">
-            Konex — capa de control con defaults seguros.
+            Konex is a control layer with safe defaults. We do not issue cards.
           </p>
         </footer>
       </main>
@@ -913,7 +914,7 @@ function VerdictRow({
       <dd className="flex items-baseline gap-2">
         <span className="num text-xs font-semibold text-foreground">{fmt(cents)}</span>
         <Chip tone={exceeded ? "destructive" : "success"}>
-          {exceeded ? "VULNERABLE" : "CONTUVO"}
+          {exceeded ? "VULNERABLE" : "HELD"}
         </Chip>
       </dd>
     </div>

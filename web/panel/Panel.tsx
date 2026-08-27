@@ -86,7 +86,7 @@ export function PanelApp() {
           <div className="flex min-w-0 items-center gap-2.5">
             <a
               href="index.html"
-              aria-label="Volver a la página principal"
+              aria-label="Back to the home page"
               className={cx("flex items-center gap-2.5 rounded-md", focusRing)}
             >
               <img
@@ -98,7 +98,7 @@ export function PanelApp() {
             </a>
             <Chip tone="warning" dot={false}>
               <FlaskConical className="size-3" aria-hidden="true" />
-              <span className="hidden sm:inline">DEMO · SIN DINERO REAL</span>
+              <span className="hidden sm:inline">DEMO · NO REAL MONEY</span>
               <span className="sm:hidden">DEMO</span>
             </Chip>
           </div>
@@ -110,12 +110,12 @@ export function PanelApp() {
                 focusRing,
               )}
             >
-              SIMULADOR
+              SIMULATOR
             </a>
             <button
               type="button"
               onClick={toggle}
-              aria-label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
               className={cx(
                 "inline-flex size-9 cursor-pointer items-center justify-center rounded-md border border-transparent text-muted-foreground hover:border-border hover:text-foreground",
                 focusRing,
@@ -134,20 +134,20 @@ export function PanelApp() {
       <main className="relative mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
         <div className="max-w-2xl">
           <p className="font-mono text-xs font-semibold tracking-[0.22em] text-gold">
-            PANEL DE CONTROL
+            CONTROL PANEL
           </p>
           <h1 className="font-display mt-3 text-4xl leading-[1.02] md:text-5xl">
-            Tus agentes y <span className="display-accent">su plata.</span>
+            Your agents and <span className="display-accent">their money.</span>
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            Emitís tarjetas con topes obligatorios, mirás cada cobro con su motivo y
-            cortás todo con un botón. El emisor es un mock local: las decisiones son
-            reales, la plata no.
+            Scope cards from a licensed issuer with mandatory caps, watch every
+            charge with its reason, and cut everything with one button. The
+            issuer here is a local mock: the decisions are real, the money is not.
           </p>
         </div>
 
         {!ready && (
-          <p className="mt-8 text-sm text-muted-foreground">Cargando el panel…</p>
+          <p className="mt-8 text-sm text-muted-foreground">Loading the panel…</p>
         )}
 
         {ready && (
@@ -158,19 +158,19 @@ export function PanelApp() {
               onKill={() =>
                 run(async () => {
                   const n = await store.killAll();
-                  return `Kill switch activado. ${n} tarjetas cerradas.`;
+                  return `Kill switch on. ${n} cards closed.`;
                 })
               }
               onRelease={() =>
                 run(async () => {
                   store.releaseKill();
-                  return "Kill switch desactivado.";
+                  return "Kill switch off.";
                 })
               }
               onDeposit={(cents) =>
                 run(async () => {
                   store.deposit(cents);
-                  return `Depositaste ${usd(cents)}.`;
+                  return `Deposited ${usd(cents)}.`;
                 })
               }
             />
@@ -192,8 +192,8 @@ export function PanelApp() {
 
         <footer className="mt-12 border-t border-border pt-5">
           <p className="text-xs text-muted-foreground">
-            Konex — capa de control con defaults seguros. No emitimos tarjetas:
-            la emisión la provee un tercero y esta capa va delante.
+            Konex is a control layer with safe defaults. We do not issue cards:
+            a licensed issuer opens them, and this layer sits in front.
           </p>
         </footer>
       </main>
@@ -222,11 +222,11 @@ function TreasuryStrip({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
         <div className="flex items-center gap-2">
           <Wallet className="size-4 text-gold" aria-hidden="true" />
-          <h2 className="font-display text-lg">Presupuesto · simulado</h2>
+          <h2 className="font-display text-lg">Budget · simulated</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label htmlFor="deposit" className="sr-only">
-            Monto a depositar
+            Amount to deposit
           </label>
           <Input
             id="deposit"
@@ -244,12 +244,12 @@ function TreasuryStrip({
             onClick={() => cents !== null && onDeposit(cents)}
           >
             <Plus className="size-3.5" aria-hidden="true" />
-            Depositar
+            Deposit
           </Button>
           {killed ? (
             <Button variant="outline" size="sm" onClick={onRelease}>
               <Check className="size-3.5" aria-hidden="true" />
-              Desactivar kill
+              Release kill
             </Button>
           ) : (
             <Button variant="danger" size="sm" onClick={onKill}>
@@ -263,20 +263,20 @@ function TreasuryStrip({
       {killed && (
         <p className="flex items-center gap-2 border-b border-border bg-destructive-soft px-4 py-2.5 text-xs font-semibold text-destructive md:px-5">
           <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
-          Kill switch activo: todas las tarjetas están muertas y no se puede emitir.
+          Kill switch on: every card is dead and no new cards can be requested.
         </p>
       )}
 
       <dl className="grid grid-cols-2 divide-border sm:grid-cols-4 sm:divide-x">
-        <Stat label="Depositado" value={usd(treasury.depositedCents)} />
-        <Stat label="Gastado" value={usd(treasury.spentCents)} />
+        <Stat label="Deposited" value={usd(treasury.depositedCents)} />
+        <Stat label="Spent" value={usd(treasury.spentCents)} />
         <Stat
-          label="Comprometido"
+          label="Committed"
           value={usd(treasury.committedCents)}
-          hint="Presupuesto de tarjetas vivas sin gastar"
+          hint="Budget on live cards not yet spent"
         />
         <Stat
-          label="Disponible"
+          label="Available"
           value={usd(treasury.availableCents)}
           tone={treasury.availableCents <= 0 ? "warning" : "gold"}
         />
@@ -341,15 +341,15 @@ function IssueForm({
 
   async function submit(): Promise<void> {
     if (budgetCents === null || budgetCents === 0) {
-      setError("Poné un presupuesto válido.");
+      setError("Enter a valid budget.");
       return;
     }
     if (perTxCents === null || perTxCents === 0) {
-      setError("Poné un cap por transacción válido.");
+      setError("Enter a valid per-transaction cap.");
       return;
     }
     if (perTxCents > budgetCents) {
-      setError("El cap por transacción no puede superar el presupuesto.");
+      setError("The per-transaction cap cannot exceed the budget.");
       return;
     }
     if (blocker !== null) {
@@ -365,19 +365,19 @@ function IssueForm({
         perTransactionCents: perTxCents,
         ttlHours: Number(ttlHours),
         singleUse,
-        taskId: task.trim() === "" ? "sin-tarea" : task.trim(),
+        taskId: task.trim() === "" ? "no-task" : task.trim(),
       });
-      return `Tarjeta ••${row.last4} emitida para ${row.agentName} por ${usd(row.budgetCents)}.`;
+      return `Card ••${row.last4} scoped for ${row.agentName} at ${usd(row.budgetCents)}.`;
     });
   }
 
   return (
     <Card
-      title="Emitir tarjeta"
-      description="Los topes no son opcionales. Esa es la diferencia con pedirla directo al emisor."
+      title="Request a card"
+      description="The caps are not optional. That is the difference from asking the issuer directly."
     >
       <div className="space-y-4">
-        <Field id="agent" label="Agente" required>
+        <Field id="agent" label="Agent" required>
           <Select
             id="agent"
             value={agentId}
@@ -385,7 +385,7 @@ function IssueForm({
           >
             {store.agents.map((agent) => (
               <option key={agent.id} value={agent.id}>
-                {agent.name} — {agent.purpose}
+                {agent.name}: {agent.purpose}
               </option>
             ))}
           </Select>
@@ -393,9 +393,9 @@ function IssueForm({
 
         <Field
           id="merchant"
-          label="Comercio"
+          label="Merchant"
           required
-          hint="Allowlist, no blacklist: la tarjeta solo cobra acá."
+          hint="Allowlist, not blacklist: the card only charges here."
         >
           <Select
             id="merchant"
@@ -411,7 +411,7 @@ function IssueForm({
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="budget" label="Presupuesto total" required>
+          <Field id="budget" label="Total budget" required>
             <Input
               id="budget"
               inputMode="decimal"
@@ -421,7 +421,7 @@ function IssueForm({
               aria-invalid={budgetCents === null}
             />
           </Field>
-          <Field id="pertx" label="Cap por cobro" required>
+          <Field id="pertx" label="Cap per charge" required>
             <Input
               id="pertx"
               inputMode="decimal"
@@ -433,27 +433,27 @@ function IssueForm({
           </Field>
         </div>
 
-        <Field id="ttl" label="Vive por">
+        <Field id="ttl" label="Lives for">
           <Select
             id="ttl"
             value={ttlHours}
             onChange={(e) => setTtlHours(e.target.value)}
           >
-            <option value="1">1 hora</option>
-            <option value="24">24 horas</option>
-            <option value="72">3 días</option>
-            <option value="168">7 días</option>
+            <option value="1">1 hour</option>
+            <option value="24">24 hours</option>
+            <option value="72">3 days</option>
+            <option value="168">7 days</option>
           </Select>
         </Field>
 
-        <Field id="task" label="Tarea que la origina" hint="Va en cada recibo.">
+        <Field id="task" label="Task that scopes it" hint="Goes on every receipt.">
           <Input id="task" value={task} onChange={(e) => setTask(e.target.value)} />
         </Field>
 
         <Checkbox
           id="single"
-          label="Un solo uso"
-          hint="Muere después del primer cobro aprobado, incluso si el número se filtró."
+          label="Single use"
+          hint="Dies after the first approved charge, even if the number leaked."
           checked={singleUse}
           onChange={setSingleUse}
         />
@@ -461,13 +461,13 @@ function IssueForm({
         <div className="rounded-xl border border-border bg-muted/50 p-3">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Lock className="size-3" aria-hidden="true" />
-            No se puede apagar
+            Cannot be turned off
           </p>
           <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-            <li>Cap acumulado igual al presupuesto — corta el structuring.</li>
-            <li>Vencimiento obligatorio — ninguna tarjeta vive para siempre.</li>
-            <li>Se cierra sola cuando la tarea termina — mata la suscripción zombie.</li>
-            <li>Una devolución no devuelve margen para gastar.</li>
+            <li>Lifetime cap equals the budget. That stops structuring.</li>
+            <li>Mandatory expiry. No card lives forever.</li>
+            <li>Closes itself when the task ends. That kills the zombie subscription.</li>
+            <li>A refund does not give spend room back.</li>
           </ul>
         </div>
 
@@ -480,7 +480,7 @@ function IssueForm({
 
         <Button onClick={submit} className="w-full" disabled={blocker !== null}>
           <CreditCard className="size-4" aria-hidden="true" />
-          Emitir con defaults seguros
+          Request with safe defaults
         </Button>
       </div>
     </Card>
@@ -499,7 +499,7 @@ function AgentsPanel({
   }>;
 }) {
   return (
-    <Card title="Agentes" description="Quién gasta y cuánto lleva gastado.">
+    <Card title="Agents" description="Who spends and how much they have spent.">
       <ul className="divide-y divide-border">
         {agents.map((agent) => (
           <li key={agent.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
@@ -513,7 +513,7 @@ function AgentsPanel({
             <div className="shrink-0 text-right">
               <p className="num text-sm font-semibold">{usd(agent.spentCents)}</p>
               <p className="text-[11px] text-muted-foreground">
-                {agent.activeCards} {agent.activeCards === 1 ? "activa" : "activas"}
+                {agent.activeCards} {agent.activeCards === 1 ? "active" : "active"}
               </p>
             </div>
           </li>
@@ -534,17 +534,17 @@ function CardsPanel({
 }) {
   return (
     <Card
-      title="Tarjetas"
-      description="Cada una atada a un agente, un comercio y una tarea."
+      title="Cards"
+      description="Each one bound to an agent, a merchant and a task."
       actions={
         <Chip tone="muted" dot={false}>
-          {cards.filter((c) => c.status === "activa").length} activas
+          {cards.filter((c) => c.status === "activa").length} active
         </Chip>
       }
     >
       {cards.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          Todavía no emitiste ninguna tarjeta.
+          No cards scoped yet.
         </p>
       ) : (
         <ul className="space-y-4">
@@ -583,7 +583,7 @@ function CardItem({
             last4={card.last4}
             status={card.status}
             ttlLabel={`${Math.round(card.ttlSeconds / 3600)}H`}
-            presetLabel={card.singleUse ? "1 USO" : "SEGURA"}
+            presetLabel={card.singleUse ? "1 USE" : "SAFE"}
             holder={`${card.agentName.toUpperCase()} · ${card.taskId.toUpperCase()}`}
             compact
           />
@@ -594,8 +594,8 @@ function CardItem({
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{card.merchant}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {card.agentName} · {card.taskId} · vence{" "}
-                {card.expiresAt.toLocaleString("es-AR", {
+                {card.agentName} · {card.taskId} · expires{" "}
+                {card.expiresAt.toLocaleString("en-US", {
                   day: "2-digit",
                   month: "short",
                   hour: "2-digit",
@@ -613,10 +613,10 @@ function CardItem({
               }
             >
               {card.status === "activa"
-                ? "ACTIVA"
+                ? "ACTIVE"
                 : card.status === "kill"
                   ? "KILL"
-                  : "CERRADA"}
+                  : "CLOSED"}
             </Chip>
           </div>
 
@@ -625,11 +625,11 @@ function CardItem({
               <span className="num font-semibold">
                 {usd(card.spentCents)}{" "}
                 <span className="font-normal text-muted-foreground">
-                  de {usd(card.budgetCents)}
+                  of {usd(card.budgetCents)}
                 </span>
               </span>
               <span className="num text-muted-foreground">
-                queda {usd(card.remainingCents)}
+                left {usd(card.remainingCents)}
               </span>
             </div>
             <div
@@ -638,7 +638,7 @@ function CardItem({
               aria-valuenow={pct}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`Gastado en ${card.merchant}`}
+              aria-label={`Spent at ${card.merchant}`}
             >
               <div
                 className={cx(
@@ -654,7 +654,7 @@ function CardItem({
             <div className="space-y-2 border-t border-border pt-3">
               <div className="flex flex-wrap items-center gap-2">
                 <label htmlFor={`amt-${card.id}`} className="sr-only">
-                  Monto del cobro
+                  Charge amount
                 </label>
                 <Input
                   id={`amt-${card.id}`}
@@ -675,12 +675,12 @@ function CardItem({
                         withCaptcha,
                       });
                       return r.approved
-                        ? `Cobro de ${usd(r.amountCents)} aprobado.`
-                        : `Cobro rechazado: ${r.code}.`;
+                        ? `Charge of ${usd(r.amountCents)} approved.`
+                        : `Charge declined: ${r.code}.`;
                     })
                   }
                 >
-                  Probar cobro
+                  Try a charge
                 </Button>
                 <Button
                   variant="outline"
@@ -688,18 +688,18 @@ function CardItem({
                   onClick={() =>
                     void onDone(async () => {
                       await store.closeCard(card.id);
-                      return `Tarjeta ••${card.last4} cerrada.`;
+                      return `Card ••${card.last4} closed.`;
                     })
                   }
                 >
                   <Ban className="size-3.5" aria-hidden="true" />
-                  Cerrar
+                  Close
                 </Button>
               </div>
               <Checkbox
                 id={`cap-${card.id}`}
-                label="El checkout tiene captcha"
-                hint="Steel lo resuelve en la misma sesión y queda en el recibo."
+                label="The checkout has a captcha"
+                hint="Steel solves it in the same session and it lands on the receipt."
                 checked={withCaptcha}
                 onChange={setWithCaptcha}
               />
@@ -707,8 +707,8 @@ function CardItem({
           ) : (
             <p className="border-t border-border pt-3 text-xs text-muted-foreground">
               {card.approvedCharges}{" "}
-              {card.approvedCharges === 1 ? "cobro aprobado" : "cobros aprobados"}. La
-              tarjeta ya no acepta nada.
+              {card.approvedCharges === 1 ? "approved charge" : "approved charges"}. The
+              card no longer accepts anything.
             </p>
           )}
         </div>
@@ -721,8 +721,8 @@ function ReceiptsPanel({ receipts }: { receipts: ReceiptRow[] }) {
   return (
     <section className="mt-5">
       <Card
-        title="Recibos"
-        description="Cada cobro con su agente, su tarea y el motivo exacto."
+        title="Receipts"
+        description="Every charge with its agent, task and exact reason."
         actions={
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Receipt className="size-3.5" aria-hidden="true" />
@@ -732,7 +732,7 @@ function ReceiptsPanel({ receipts }: { receipts: ReceiptRow[] }) {
       >
         {receipts.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            Todavía no hubo cobros.
+            No charges yet.
           </p>
         ) : (
           <ol className="divide-y divide-border">
@@ -749,7 +749,7 @@ function ReceiptsPanel({ receipts }: { receipts: ReceiptRow[] }) {
                     <p className="truncate text-sm font-medium">{r.merchant}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {r.agentName} · ••{r.cardLast4} · {r.taskId} ·{" "}
-                      {r.at.toLocaleTimeString("es-AR", {
+                      {r.at.toLocaleTimeString("en-US", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
@@ -766,7 +766,7 @@ function ReceiptsPanel({ receipts }: { receipts: ReceiptRow[] }) {
                     {usd(r.amountCents)}
                   </span>
                   <Chip tone={r.approved ? "success" : "destructive"}>
-                    {r.approved ? "APROBADO" : "RECHAZADO"}
+                    {r.approved ? "APPROVED" : "DECLINED"}
                   </Chip>
                 </div>
                 <p className="mt-1.5 pl-10 text-xs leading-relaxed text-muted-foreground">
@@ -778,12 +778,12 @@ function ReceiptsPanel({ receipts }: { receipts: ReceiptRow[] }) {
                   >
                     {r.code}
                   </span>{" "}
-                  — {r.reason}
+                  · {r.reason}
                 </p>
                 {r.captcha !== null && (
                   <p className="mt-1.5 flex items-center gap-1.5 pl-10 text-xs text-muted-foreground">
                     <ShieldCheck className="size-3.5 shrink-0 text-gold" aria-hidden="true" />
-                    Captcha <span className="num">{r.captcha.kind}</span> resuelto en el
+                    Captcha <span className="num">{r.captcha.kind}</span> solved at
                     checkout
                     {r.captcha.durationMs !== undefined && (
                       <span className="num"> · {r.captcha.durationMs}ms</span>

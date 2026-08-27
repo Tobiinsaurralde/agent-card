@@ -6,10 +6,9 @@ import tailwindcss from "@tailwindcss/vite";
 /**
  * Dónde va a vivir el sitio.
  *
- * GitHub Pages sirve un repo de proyecto desde `/<repo>/`, no desde la raíz, y
- * con el base mal puesto las hojas de estilo y los bundles dan 404: la página
- * carga en blanco sin ningún error visible. Con dominio propio esto vuelve a
- * "/", y por eso es una variable y no una constante.
+ * En konex.xyz el sitio vive en la raíz (`SITE_BASE=/`). Si se sirve desde
+ * `user.github.io/<repo>/` hay que poner `/<repo>/`: si no, CSS y JS dan 404
+ * y la página carga en blanco.
  *
  * Los links entre páginas son relativos a propósito, así funcionan con
  * cualquiera de los dos.

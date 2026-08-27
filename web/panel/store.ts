@@ -96,9 +96,9 @@ interface AgentSeed {
 }
 
 const AGENTS: AgentSeed[] = [
-  { id: "ag-research", name: "research-bot", purpose: "Compra créditos de API" },
-  { id: "ag-infra", name: "infra-bot", purpose: "Provisiona cloud y dominios" },
-  { id: "ag-ops", name: "ops-bot", purpose: "Renueva suscripciones de SaaS" },
+  { id: "ag-research", name: "research-bot", purpose: "Buys API credits" },
+  { id: "ag-infra", name: "infra-bot", purpose: "Provisions cloud and domains" },
+  { id: "ag-ops", name: "ops-bot", purpose: "Renews SaaS subscriptions" },
 ];
 
 export class PanelStore {
@@ -122,7 +122,7 @@ export class PanelStore {
   }
 
   deposit(amountCents: Cents): void {
-    if (amountCents <= 0) throw new Error("El depósito tiene que ser mayor a cero.");
+    if (amountCents <= 0) throw new Error("The deposit must be greater than zero.");
     this.depositedCents += amountCents;
   }
 
@@ -149,11 +149,11 @@ export class PanelStore {
    * para explicar antes de que el usuario apriete, no después.
    */
   issueBlocker(budgetCents: Cents): string | null {
-    if (this.killed) return "El kill switch global está activo. Desactivalo para emitir.";
-    if (budgetCents <= 0) return "El presupuesto tiene que ser mayor a cero.";
+    if (this.killed) return "The global kill switch is on. Release it to request a card.";
+    if (budgetCents <= 0) return "The budget must be greater than zero.";
     const { availableCents } = this.treasury();
     if (budgetCents > availableCents) {
-      return `No alcanza el saldo: hay ${usd(availableCents)} disponibles.`;
+      return `Not enough balance: ${usd(availableCents)} available.`;
     }
     return null;
   }
@@ -206,7 +206,7 @@ export class PanelStore {
     opts: { amountCents: Cents; merchant?: string; withCaptcha: boolean },
   ): Promise<ReceiptRow> {
     const entry = this.entries.find((e) => e.id === cardId);
-    if (entry === undefined) throw new Error(`Tarjeta desconocida: ${cardId}`);
+    if (entry === undefined) throw new Error(`Unknown card: ${cardId}`);
 
     const merchant = opts.merchant ?? entry.merchant;
     let captcha: CaptchaEvent | null = null;
@@ -238,7 +238,7 @@ export class PanelStore {
       approved: outcome.approved,
       code: outcome.decision.code,
       reason: outcome.decision.allow
-        ? `El rail respondió ${outcome.provider?.code ?? "sin código"}.`
+        ? `The rail replied ${outcome.provider?.code ?? "no code"}.`
         : outcome.decision.reason,
       captcha,
     };

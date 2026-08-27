@@ -85,7 +85,7 @@ export async function runStep(
     approved: outcome.approved,
     code: outcome.decision.code,
     reason: outcome.decision.allow
-      ? `El rail respondió ${outcome.provider?.code ?? "sin código"}.`
+      ? `The rail replied ${outcome.provider?.code ?? "no code"}.`
       : outcome.decision.reason,
   };
 }
@@ -128,7 +128,7 @@ export const scenarioDefs: ScenarioDef[] = [
     id: "structuring",
     name: "Structuring",
     hypothesis:
-      "Con cap de USD 10 por transacción y sin cap acumulado, dos cargos de USD 9 gastan USD 18.",
+      "With a USD 10 per-transaction cap and no lifetime cap, two USD 9 charges spend USD 18.",
     intendedCapCents: 1000,
     budgetCents: 1000,
     perTransactionCents: 1000,
@@ -142,9 +142,9 @@ export const scenarioDefs: ScenarioDef[] = [
   },
   {
     id: "zombie",
-    name: "Suscripción zombie",
+    name: "Zombie subscription",
     hypothesis:
-      "La tarea termina, la tarjeta queda viva y el SaaS sigue cobrando el mes siguiente.",
+      "The task ends, the card stays alive and the SaaS keeps charging the next month.",
     intendedCapCents: 900,
     budgetCents: 900,
     perTransactionCents: 900,

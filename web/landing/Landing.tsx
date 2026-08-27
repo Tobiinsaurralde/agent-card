@@ -342,7 +342,7 @@ const DEFAULTS_MARQUEE = [
   "MERCHANT ALLOWLIST",
   "KILL SWITCH",
   "RECEIPT PER CHARGE",
-  "SPANISH-FIRST",
+  "PLAIN REASONS",
 ];
 
 function Marquee() {
@@ -439,10 +439,10 @@ export function Landing() {
               className="animate-fade-up mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground"
               style={{ animationDelay: "160ms" }}
             >
-              Virtual cards with safe defaults for AI agents that shop on their
-              own. You set the budget, the merchant and the lifespan. The agent
-              buys. Everything else gets declined — with the exact reason on
-              the receipt.
+              A control layer for virtual cards that AI agents use to shop.
+              You set the budget, the merchant and the lifespan. A licensed
+              issuer opens the card. We decide if the charge goes through,
+              with the exact reason on the receipt.
             </p>
             <div
               className="animate-fade-up mt-8 flex flex-wrap items-center justify-center gap-3"
@@ -476,7 +476,7 @@ export function Landing() {
                 <SpecCard />
               </FlowStep>
               <FlowArrow />
-              <FlowStep label="02 · THE AGENT GETS A CARD">
+              <FlowStep label="02 · THE ISSUER OPENS A CARD">
                 <VirtualCard
                   issued
                   last4="4021"
@@ -507,7 +507,7 @@ export function Landing() {
                     <span className="display-accent">open.</span>
                   </>
                 }
-                lead="Card providers sell you primitives: per-transaction limits, MCC, velocity. They don't tell you what to set. 90% of the risk lives in the configuration — and these are the three holes the typical config leaves open."
+                lead="Card providers sell you primitives: per-transaction limits, MCC, velocity. They don't tell you what to set. 90% of the risk lives in the configuration, and these are the three holes the typical config leaves open."
               />
             </Reveal>
             <div className="mt-14 grid gap-5 md:grid-cols-3">
@@ -523,7 +523,7 @@ export function Landing() {
                   n: "02",
                   icon: Clock,
                   title: "Zombie subscription",
-                  body: "The task ended a month ago. The card stayed alive. The SaaS renewed anyway — and it will renew again next month.",
+                  body: "The task ended a month ago. The card stayed alive. The SaaS renewed anyway, and it will renew again next month.",
                   code: "renewal approved · day 30",
                 },
                 {
@@ -583,13 +583,13 @@ export function Landing() {
                 {
                   icon: ShieldCheck,
                   title: "Mandatory lifetime cap",
-                  body: "A LIFETIME ceiling on top of the per-charge limit. A card without a total cap simply can't exist: structuring dies here.",
+                  body: "A LIFETIME ceiling on top of the per-charge limit. A card without a total cap cannot be requested: structuring dies here.",
                   span: "md:col-span-4",
                 },
                 {
                   icon: Clock,
                   title: "A lifespan with automatic closure",
-                  body: "Every card is born with a TTL. Past it, everything is declined. No subscription outlives its task.",
+                  body: "Every scoped card starts with a TTL. Past it, everything is declined. No subscription outlives its task.",
                   span: "md:col-span-2",
                 },
                 {
@@ -612,8 +612,8 @@ export function Landing() {
                 },
                 {
                   icon: Languages,
-                  title: "Spanish-first",
-                  body: "Errors, docs and onboarding in Spanish. Built for a solo dev in LATAM, not a finance team in the US.",
+                  title: "Plain-language reasons",
+                  body: "Errors and receipts say exactly why, in words a solo builder can read. Not bank-speak for a finance team.",
                   span: "md:col-span-6",
                 },
               ].map((item, index) => (
@@ -663,7 +663,7 @@ export function Landing() {
                 {
                   n: "01",
                   title: "You define the policy",
-                  body: "Total budget, allowed merchant, lifespan. The cap is mandatory: a card without a ceiling can't be created.",
+                  body: "Total budget, allowed merchant, lifespan. The cap is mandatory: a card without a ceiling cannot be requested.",
                   code: 'request_card { amount: 10, merchant: "api-credits", ttl: "24h" }',
                 },
                 {
@@ -676,7 +676,7 @@ export function Landing() {
                   n: "03",
                   title: "Every charge gets decided",
                   body: "The policy is evaluated server-side, outside the prompt. DENY wins. The agent can't negotiate its own limit.",
-                  code: "DENY · LIFETIME_EXCEEDED — USD 10.00 cap",
+                  code: "DENY · LIFETIME_EXCEEDED · USD 10.00 cap",
                 },
               ].map((step, index) => (
                 <Reveal key={step.n} delayMs={index * 80}>
@@ -723,7 +723,7 @@ export function Landing() {
                   n: "01",
                   icon: Wallet,
                   title: "Your money should never be mine.",
-                  body: "Where this is going: funds that stay in your wallet under an allowance you can revoke. That part is not built. Today the balance sits with the card issuer, like every card program does — and we'd rather you read it here than find out later.",
+                  body: "Where this is going: funds that stay in your wallet under an allowance you can revoke. That part is not built. Today the balance sits with the card issuer, like every card program does, and we'd rather you read it here than find out later.",
                 },
                 {
                   n: "02",
@@ -785,7 +785,7 @@ export function Landing() {
                   a USD 5 online charge on a KYC issuer, then the structuring
                   test with real money. If the bypass doesn't get through even
                   with the provider's permissive config, this product has no
-                  reason to exist — and we'll say it right here.
+                  reason to exist, and we'll say it right here.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <CtaLink href="simulador.html">
