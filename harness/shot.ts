@@ -17,6 +17,9 @@ const pages = [
   { path: "/", name: "landing-full", fullPage: true },
   { path: "/panel.html", name: "panel", fullPage: true },
   { path: "/simulador.html", name: "simulador", fullPage: true },
+  { path: "/docs.html", name: "docs", fullPage: true },
+  { path: "/whitepaper.html", name: "whitepaper", fullPage: true },
+  { path: "/tokenomics.html", name: "tokenomics", fullPage: true },
 ];
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });

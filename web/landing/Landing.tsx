@@ -246,7 +246,9 @@ const navLinks = [
   { href: "#problem", label: "PROBLEM" },
   { href: "#defaults", label: "DEFAULTS" },
   { href: "#how-it-works", label: "HOW" },
-  { href: "#principles", label: "PRINCIPLES" },
+  { href: "docs.html", label: "DOCS" },
+  { href: "whitepaper.html", label: "WHITEPAPER" },
+  { href: "tokenomics.html", label: "$KNX" },
 ];
 
 /** La terminal del diagrama: cada línea entra sola, con cursor titilando. */
@@ -810,15 +812,25 @@ export function Landing() {
             A control layer, not an issuer. The BIN, the bank and the KYC are
             bought from a provider; we decide whether the charge goes through.
           </p>
-          <a
-            href="simulador.html"
-            className={cx(
-              "rounded-sm font-mono text-[11px] font-semibold tracking-[0.18em] text-accent underline-offset-4 hover:underline",
-              focusRing,
-            )}
-          >
-            SIMULATOR
-          </a>
+          <div className="flex flex-wrap gap-4">
+            {[
+              { href: "docs.html", label: "DOCS" },
+              { href: "whitepaper.html", label: "WHITEPAPER" },
+              { href: "tokenomics.html", label: "$KNX" },
+              { href: "simulador.html", label: "SIMULATOR" },
+            ].map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className={cx(
+                  "rounded-sm font-mono text-[11px] font-semibold tracking-[0.18em] text-accent underline-offset-4 hover:underline",
+                  focusRing,
+                )}
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
         </div>
       </footer>
     </div>
