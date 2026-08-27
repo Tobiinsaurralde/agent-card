@@ -56,7 +56,7 @@ jobs:
 
       - name: Build
         env:
-          # Dominio propio (konex.xyz): el sitio vive en la raíz. Si volvemos a
+          # Dominio propio (konextech.xyz): el sitio vive en la raíz. Si volvemos a
           # servirlo desde /<repo>/ en github.io, esto tiene que ser /repo/.
           SITE_BASE: /
           VITE_WAITLIST_ENDPOINT: ${{ vars.WAITLIST_ENDPOINT }}
