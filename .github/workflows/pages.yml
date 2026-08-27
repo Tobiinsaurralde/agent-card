@@ -47,6 +47,11 @@ jobs:
       # legible: en paralelo, el que se cuelga se pierde entre los demás.
       - name: Tests
         timeout-minutes: 5
+        env:
+          # Los tests que levantan Chrome son flaky en runners compartidos:
+          # pasan y fallan por timeout en commits idénticos. Acá el gate es
+          # el motor de policy, no el driver de browser, que se prueba local.
+          AGENT_CARD_SKIP_BROWSER_TESTS: "1"
         run: >
           node --import tsx --test
           --test-reporter=spec
