@@ -68,7 +68,7 @@ function Mechanism({
 export function Tokenomics() {
   return (
     <div className="min-h-screen overflow-x-clip">
-      <SiteHeader current="tokenomics.html" />
+      <SiteHeader current="/tokenomics/" />
       <main>
         <PageIntro
           tag="$KNX · TOKEN MODEL"

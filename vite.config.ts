@@ -10,8 +10,8 @@ import tailwindcss from "@tailwindcss/vite";
  * `user.github.io/<repo>/` hay que poner `/<repo>/`: si no, CSS y JS dan 404
  * y la página carga en blanco.
  *
- * Los links entre páginas son relativos a propósito, así funcionan con
- * cualquiera de los dos.
+ * Las páginas viven en carpetas (`/docs/`, `/panel/`) para que la URL no
+ * lleve `.html`. Los `.html` de la raíz quedan como redirect a esas rutas.
  */
 const base = process.env["SITE_BASE"] ?? "/";
 
@@ -23,11 +23,17 @@ export default defineConfig({
     rollupOptions: {
       input: {
         landing: resolve(import.meta.dirname, "index.html"),
-        panel: resolve(import.meta.dirname, "panel.html"),
-        simulador: resolve(import.meta.dirname, "simulador.html"),
-        docs: resolve(import.meta.dirname, "docs.html"),
-        whitepaper: resolve(import.meta.dirname, "whitepaper.html"),
-        tokenomics: resolve(import.meta.dirname, "tokenomics.html"),
+        panel: resolve(import.meta.dirname, "panel/index.html"),
+        simulador: resolve(import.meta.dirname, "simulador/index.html"),
+        docs: resolve(import.meta.dirname, "docs/index.html"),
+        whitepaper: resolve(import.meta.dirname, "whitepaper/index.html"),
+        tokenomics: resolve(import.meta.dirname, "tokenomics/index.html"),
+        // Los viejos bookmarks con `.html` caen acá y saltan a la ruta limpia.
+        "panel-html": resolve(import.meta.dirname, "panel.html"),
+        "simulador-html": resolve(import.meta.dirname, "simulador.html"),
+        "docs-html": resolve(import.meta.dirname, "docs.html"),
+        "whitepaper-html": resolve(import.meta.dirname, "whitepaper.html"),
+        "tokenomics-html": resolve(import.meta.dirname, "tokenomics.html"),
       },
     },
   },

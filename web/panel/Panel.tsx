@@ -85,12 +85,12 @@ export function PanelApp() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 md:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
             <a
-              href="index.html"
+              href="/"
               aria-label="Back to the home page"
               className={cx("flex items-center gap-2.5 rounded-md", focusRing)}
             >
               <img
-                src="logo-light.png"
+                src="/logo-light.png"
                 alt=""
                 className="size-8 shrink-0 rounded-md border border-border"
               />
@@ -104,7 +104,7 @@ export function PanelApp() {
           </div>
           <div className="flex shrink-0 items-center gap-3">
             <a
-              href="simulador.html"
+              href="/simulador/"
               className={cx(
                 "hidden rounded-sm font-mono text-[11px] font-semibold tracking-[0.18em] text-muted-foreground hover:text-accent sm:inline-flex",
                 focusRing,

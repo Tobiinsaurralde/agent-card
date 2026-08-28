@@ -246,9 +246,9 @@ const navLinks = [
   { href: "#problem", label: "PROBLEM" },
   { href: "#defaults", label: "DEFAULTS" },
   { href: "#how-it-works", label: "HOW" },
-  { href: "docs.html", label: "DOCS" },
-  { href: "whitepaper.html", label: "WHITEPAPER" },
-  { href: "tokenomics.html", label: "$KNX" },
+  { href: "/docs/", label: "DOCS" },
+  { href: "/whitepaper/", label: "WHITEPAPER" },
+  { href: "/tokenomics/", label: "$KNX" },
 ];
 
 /** La terminal del diagrama: cada línea entra sola, con cursor titilando. */
@@ -386,8 +386,8 @@ export function Landing() {
 
       <header className="sticky top-0 z-40 border-b border-foreground/15 bg-background/90 backdrop-blur-md">
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5 md:px-6">
-          <a href="index.html" className={cx("flex items-center gap-2.5 rounded-md", focusRing)}>
-            <img src="logo-light.png" alt="" className="size-8 rounded-md border border-border" />
+          <a href="/" className={cx("flex items-center gap-2.5 rounded-md", focusRing)}>
+            <img src="/logo-light.png" alt="" className="size-8 rounded-md border border-border" />
             <span className="font-display text-lg leading-none">Konex</span>
           </a>
           <div className="hidden items-center gap-5 md:flex">
@@ -404,7 +404,7 @@ export function Landing() {
               </a>
             ))}
             <a
-              href="panel.html"
+              href="/panel/"
               className={cx(
                 "rounded-sm font-mono text-[11px] font-semibold tracking-[0.18em] text-muted-foreground transition-colors duration-100 ease-out hover:text-accent",
                 focusRing,
@@ -413,7 +413,7 @@ export function Landing() {
               DASHBOARD
             </a>
           </div>
-          <CtaLink href="simulador.html" variant="ink">
+          <CtaLink href="/simulador/" variant="ink">
             Try the simulator
             <ArrowRight className="size-4" aria-hidden="true" />
           </CtaLink>
@@ -450,11 +450,11 @@ export function Landing() {
               className="animate-fade-up mt-8 flex flex-wrap items-center justify-center gap-3"
               style={{ animationDelay: "240ms" }}
             >
-              <CtaLink href="simulador.html">
+              <CtaLink href="/simulador/">
                 Try the simulator
                 <ArrowRight className="size-4" aria-hidden="true" />
               </CtaLink>
-              <CtaLink href="panel.html" variant="outline">
+              <CtaLink href="/panel/" variant="outline">
                 See the panel
               </CtaLink>
             </div>
@@ -790,7 +790,7 @@ export function Landing() {
                   reason to exist, and we'll say it right here.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <CtaLink href="simulador.html">
+                  <CtaLink href="/simulador/">
                     <Play className="size-4" aria-hidden="true" />
                     Run the attacks yourself
                   </CtaLink>
@@ -805,7 +805,7 @@ export function Landing() {
       <footer className="border-t border-foreground/15">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 md:flex-row md:items-center md:justify-between md:px-6">
           <div className="flex items-center gap-3">
-            <img src="logo-light.png" alt="" className="size-9 rounded-md border border-border" />
+            <img src="/logo-light.png" alt="" className="size-9 rounded-md border border-border" />
             <span className="font-display text-lg">Konex</span>
           </div>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -814,10 +814,10 @@ export function Landing() {
           </p>
           <div className="flex flex-wrap gap-4">
             {[
-              { href: "docs.html", label: "DOCS" },
-              { href: "whitepaper.html", label: "WHITEPAPER" },
-              { href: "tokenomics.html", label: "$KNX" },
-              { href: "simulador.html", label: "SIMULATOR" },
+              { href: "/docs/", label: "DOCS" },
+              { href: "/whitepaper/", label: "WHITEPAPER" },
+              { href: "/tokenomics/", label: "$KNX" },
+              { href: "/simulador/", label: "SIMULATOR" },
             ].map((link) => (
               <a
                 key={link.href}

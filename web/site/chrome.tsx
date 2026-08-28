@@ -11,18 +11,18 @@ import { cx, focusRing } from "../ui.js";
  */
 
 const LINKS = [
-  { href: "docs.html", label: "DOCS" },
-  { href: "whitepaper.html", label: "WHITEPAPER" },
-  { href: "tokenomics.html", label: "$KNX" },
-  { href: "panel.html", label: "DASHBOARD" },
+  { href: "/docs/", label: "DOCS" },
+  { href: "/whitepaper/", label: "WHITEPAPER" },
+  { href: "/tokenomics/", label: "$KNX" },
+  { href: "/panel/", label: "DASHBOARD" },
 ] as const;
 
 export function SiteHeader({ current }: { current?: string }) {
   return (
     <header className="sticky top-0 z-40 border-b border-foreground/15 bg-background/90 backdrop-blur-md">
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5 md:px-6">
-        <a href="index.html" className={cx("flex items-center gap-2.5 rounded-md", focusRing)}>
-          <img src="logo-light.png" alt="" className="size-8 rounded-md border border-border" />
+        <a href="/" className={cx("flex items-center gap-2.5 rounded-md", focusRing)}>
+          <img src="/logo-light.png" alt="" className="size-8 rounded-md border border-border" />
           <span className="font-display text-lg leading-none">Konex</span>
         </a>
         <div className="hidden items-center gap-5 md:flex">
@@ -42,7 +42,7 @@ export function SiteHeader({ current }: { current?: string }) {
           ))}
         </div>
         <a
-          href="simulador.html"
+          href="/simulador/"
           className={cx(
             "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold",
             "shadow-soft bg-primary text-primary-foreground hover:bg-primary/85",
@@ -63,7 +63,7 @@ export function SiteFooter() {
     <footer className="border-t border-foreground/15">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 md:flex-row md:items-center md:justify-between md:px-6">
         <div className="flex items-center gap-3">
-          <img src="logo-light.png" alt="" className="size-9 rounded-md border border-border" />
+          <img src="/logo-light.png" alt="" className="size-9 rounded-md border border-border" />
           <span className="font-display text-lg">Konex</span>
         </div>
         <p className="max-w-md text-sm leading-relaxed text-muted-foreground">

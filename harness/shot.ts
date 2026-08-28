@@ -15,11 +15,11 @@ mkdirSync(outDir, { recursive: true });
 const pages = [
   { path: "/", name: "landing-top", fullPage: false },
   { path: "/", name: "landing-full", fullPage: true },
-  { path: "/panel.html", name: "panel", fullPage: true },
-  { path: "/simulador.html", name: "simulador", fullPage: true },
-  { path: "/docs.html", name: "docs", fullPage: true },
-  { path: "/whitepaper.html", name: "whitepaper", fullPage: true },
-  { path: "/tokenomics.html", name: "tokenomics", fullPage: true },
+  { path: "/panel/", name: "panel", fullPage: true },
+  { path: "/simulador/", name: "simulador", fullPage: true },
+  { path: "/docs/", name: "docs", fullPage: true },
+  { path: "/whitepaper/", name: "whitepaper", fullPage: true },
+  { path: "/tokenomics/", name: "tokenomics", fullPage: true },
 ];
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });

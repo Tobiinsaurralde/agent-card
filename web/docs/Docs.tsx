@@ -64,7 +64,7 @@ function ToolDoc({
 export function Docs() {
   return (
     <div className="min-h-screen overflow-x-clip">
-      <SiteHeader current="docs.html" />
+      <SiteHeader current="/docs/" />
       <main>
         <PageIntro
           tag="DOCS"
@@ -405,7 +405,7 @@ complete_task         closes every card the task opened`}</Code>
             <p>
               There is a designed token model, $KNX on Solana, and no deployed
               contract. Anything trading as KNX today is fake. The model and
-              its status live on the <a className="text-accent underline-offset-4 hover:underline" href="tokenomics.html">tokenomics page</a>.
+              its status live on the <a className="text-accent underline-offset-4 hover:underline" href="/tokenomics/">tokenomics page</a>.
             </p>
           </Section>
         </ProseLayout>

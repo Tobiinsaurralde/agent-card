@@ -34,7 +34,7 @@ const TOC = [
 export function Whitepaper() {
   return (
     <div className="min-h-screen overflow-x-clip">
-      <SiteHeader current="whitepaper.html" />
+      <SiteHeader current="/whitepaper/" />
       <main>
         <PageIntro
           tag="WHITEPAPER V0.1 · LIVING DOCUMENT"
@@ -329,7 +329,7 @@ export function Whitepaper() {
               it never custodies user funds, and it carries no governance at
               launch. The full model, including everything that is not yet
               decided, lives on the{" "}
-              <a className="text-accent underline-offset-4 hover:underline" href="tokenomics.html">
+              <a className="text-accent underline-offset-4 hover:underline" href="/tokenomics/">
                 tokenomics page
               </a>
               .
