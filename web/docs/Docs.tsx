@@ -28,6 +28,7 @@ const TOC = [
   { id: "defaults", label: "Safe defaults" },
   { id: "codes", label: "Decision codes" },
   { id: "security", label: "Security model" },
+  { id: "pricing", label: "Pricing" },
   { id: "faq", label: "FAQ" },
 ];
 
@@ -375,6 +376,74 @@ complete_task         closes every card the task opened`}</Code>
             </p>
           </Section>
 
+          <Section id="pricing" title="Pricing">
+            <Callout tone="warning" title="NOT FOR SALE YET">
+              <p>
+                Nothing here is checkout. Konex starts charging the month a
+                real issuer is live and <InlineCode>request_card</InlineCode>{" "}
+                opens a real card. Until then the simulator and this MCP stay
+                free.
+              </p>
+            </Callout>
+            <p>
+              We sell the control layer, not the card. The interchange and the
+              issuance fee belong to the issuer. We do not take a cut of what
+              the agent spends.
+            </p>
+            <Table
+              head={["PLAN", "PRICE", "WHO IT IS FOR"]}
+              rows={[
+                [
+                  "Simulator",
+                  "Free, stays free",
+                  "Anyone. The public panel and this MCP against a mock issuer.",
+                ],
+                [
+                  "Solo",
+                  "USD 29 / agent / month",
+                  "A builder with one agent. This is v1, the only paid plan at launch.",
+                ],
+                [
+                  "Team",
+                  "USD 79 / workspace / month",
+                  "Up to 5 agents on one ledger. Not v1. We ship it when someone asks twice.",
+                ],
+              ]}
+            />
+            <H3>What Solo includes</H3>
+            <Table
+              head={["INCLUDED", "NOT INCLUDED"]}
+              rows={[
+                [
+                  "One agent identity, set in config, not by the agent",
+                  "Card issuance fees. Those are the issuer's, today ~USD 5 a card if that is still their price",
+                ],
+                [
+                  "The eleven MCP tools, the ledger, receipts and the kill switch",
+                  "The money the agent spends. That sits with the issuer. We never hold it",
+                ],
+                [
+                  "Mandatory lifetime cap, TTL, allowlist and all the other defaults that cannot be turned off",
+                  "A Steel or browser quota. Bring your own checkout session, or run Chrome locally",
+                ],
+                [
+                  "The panel: budget, cards, receipts, kill",
+                  "Raising a limit after issuance. There is no SKU for that, on purpose",
+                ],
+                [
+                  "Support from the person who wrote it, over email or Telegram",
+                  "Reseller KYC. v1 is bring-your-own issuer account",
+                ],
+              ]}
+            />
+            <p>
+              Cards are not metered by us. The ceiling is the budget you
+              deposited with the issuer and the lifetime cap on each card. If
+              the issuer charges per card, that bill is yours, not bundled
+              into the 29.
+            </p>
+          </Section>
+
           <Section id="faq" title="FAQ">
             <H3>Do you issue cards?</H3>
             <p>
@@ -400,6 +469,12 @@ complete_task         closes every card the task opened`}</Code>
               <InlineCode>close_card</InlineCode> the moment you suspect a
               leak. Either way, the allowlist means the number only ever worked
               at one merchant.
+            </p>
+            <H3>How much does it cost?</H3>
+            <p>
+              The simulator is free. When a real issuer is live, Solo is USD
+              29 per agent per month. There is no checkout for that today.
+              Details are in the pricing section above.
             </p>
             <H3>Is there a token?</H3>
             <p>

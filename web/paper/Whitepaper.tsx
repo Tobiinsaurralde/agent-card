@@ -296,11 +296,13 @@ export function Whitepaper() {
 
           <Section id="business" title="7 · Business model">
             <p>
-              A flat fee per agent per month, aimed at a solo developer or a
-              small team. The interchange belongs to the issuer and we do not
-              touch it. We explicitly avoid taking a spread on funding: it is
-              the closest path to becoming a money transmitter, which section 3
-              refuses.
+              A flat fee per agent per month, aimed at a solo developer.
+              Solo is USD 29 when a real issuer is live. The simulator stays
+              free. Team (USD 79, five agents) is not v1. The interchange
+              belongs to the issuer and we do not touch it. We explicitly
+              avoid taking a spread on funding: it is the closest path to
+              becoming a money transmitter, which section 3 refuses. Issuance
+              fees are the issuer's bill, not ours.
             </p>
             <p>
               The moat is not technical, and we prefer to admit it: an issuer

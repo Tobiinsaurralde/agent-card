@@ -172,6 +172,22 @@ Multi-proveedor. Multichain. Tarjetas físicas. Equipos/orgs. Dashboard más all
 
 ## 6. Precio
 
+**Decisión (31 ago 2026).** Se cobra el software, no el rail.
+
+| Plan | Precio | Cuándo |
+|---|---|---|
+| Simulator | gratis, se queda gratis | ya |
+| **Solo** | **USD 29 / agente / mes** | v1, el mes que `request_card` abra una tarjeta real |
+| Team | USD 79 / workspace / mes, hasta 5 agentes | no es v1 |
+
+**Solo incluye:** un `agentId` de config, las once tools MCP, ledger, recibos, kill switch, defaults no negociables, panel, soporte por mail/Telegram de quien lo escribió.
+
+**Solo no incluye:** fees de emisión del emisor (hoy ~USD 5/tarjeta si sigue ese precio), el gasto del agente, cuota de Steel/browser, KYC revendido. v1 es *bring your own issuer account*.
+
+**No se hace:** spread sobre el funding, fee por tarjeta de Konex encima del del emisor, ni un SKU que afloje un límite.
+
+Con 20 Solos hay señal (~USD 580/mes). No hace falta volumen de token.
+
 El interchange es del emisor. Nuestra opción realista: **fee por agente/mes**, apuntado a un dev solo
 o un equipo chico — no el ticket de EE.UU. Con 20 devs pagando ya hay señal; no necesita volumen.
 
