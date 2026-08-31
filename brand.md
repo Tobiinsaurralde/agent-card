@@ -36,9 +36,10 @@ sello con borde. Sin gradientes de fondo, sin orbes, sin grain, sin píldoras.
 
 ## Logo
 
-Robot + tarjeta + escudo + candado. Dos versiones en `public/`: `logo.png` (fondo oscuro,
-redes y avatares) y `logo-light.png` (fondo claro, favicon y nav/footer, siempre como tile
-redondeado con borde). No se recolorea ni se estira; a menos de 24px se usa solo el favicon.
+Robot + tarjeta + escudo + candado, PNG con fondo transparente. En `public/`: `logo.png`
+(redes y avatares) y `logo-light.png` (favicon, nav y footer). Va suelto, sin tile ni
+borde: el escudo ya es el contenedor. No se recolorea ni se estira; a menos de 24px se
+usa solo el favicon.
 
 ## Tipografía
 

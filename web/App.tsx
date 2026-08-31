@@ -339,7 +339,7 @@ export function App() {
               <img
                 src="/logo-light.png"
                 alt=""
-                className="size-8 shrink-0 rounded-md border border-border"
+                className="size-8 shrink-0"
               />
               <span className="font-display text-lg leading-none">Konex</span>
             </a>
